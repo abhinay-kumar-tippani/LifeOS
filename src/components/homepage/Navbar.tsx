@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,10 +37,15 @@ export function Navbar() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-foreground">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm">
-            L
-          </span>
-          <span>LifeOS</span>
+          <Image
+            src="/logo.svg"
+            alt="LifeOS"
+            width={36}
+            height={36}
+            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+            priority
+          />
+          <span className="text-2xl font-semibold">LifeOS</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -51,9 +52,13 @@ export function Sidebar({ className, onNavigate }: { className?: string; onNavig
       )}
     >
       <div className="flex h-16 items-center gap-2 border-b border-border/60 px-4">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-          L
-        </span>
+        <Image
+          src="/logo.png"
+          alt="LifeOS"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 rounded-lg object-cover"
+        />
         <span className="font-semibold tracking-tight">LifeOS</span>
       </div>
       <ScrollArea className="flex-1 px-2 py-4">

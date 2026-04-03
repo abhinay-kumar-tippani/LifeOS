@@ -22,7 +22,7 @@ export function HeroSection() {
             Habits · Tasks · Focus · Journal
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl sm:leading-[1.1] lg:text-6xl">
-            Your Productivity OS
+            Your Productivity Operating System
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground sm:text-xl">
             Plan your day, build streaks, run Pomodoro sessions, and reflect in one calm dashboard—built

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Footer() {
@@ -6,9 +7,13 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <div className="flex items-center gap-2 font-semibold">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs text-primary-foreground">
-              L
-            </span>
+            <Image
+              src="/logo.png"
+              alt="LifeOS"
+              width={32}
+              height={32}
+              className="h-8 w-8 shrink-0 rounded-lg object-cover"
+            />
             LifeOS
           </div>
           <p className="mt-2 text-sm text-muted-foreground">Your calm command center for real work.</p>
