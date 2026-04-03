@@ -43,7 +43,11 @@
 
 .dark {
   /* Premium dark theme with deep charcoal and neon accents */
+<<<<<<< HEAD
   --background: #0a0a0f;
+=======
+  --background: #121212;
+>>>>>>> 3da3fb6a28cf9e92cd25696356d683a7ed719189
   --foreground: #e4e4e7;
   --card: rgba(30, 30, 35, 0.5);
   --card-foreground: #e4e4e7;
