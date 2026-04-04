@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
   const { user, profile, refreshProfile } = useUser();
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
   const { theme, setTheme } = useTheme();
   const [name, setName] = useState(profile?.full_name ?? "");
   const [pomo, setPomo] = useState("25");

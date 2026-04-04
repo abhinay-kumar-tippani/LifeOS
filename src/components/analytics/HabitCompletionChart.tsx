@@ -11,9 +11,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subDays, eachDayOfInterval } from "date-fns";
 import type { Habit, HabitCompletion } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getHabitColor } from "@/lib/utils/habitColors";
 
 export function HabitCompletionChart({
   habits,
@@ -25,23 +26,24 @@ export function HabitCompletionChart({
   loading: boolean;
 }) {
   const data = useMemo(() => {
-    const byDate: Record<string, Record<string, number>> = {};
+    const now = new Date();
+    const start = subDays(now, 29);
+    const interval = eachDayOfInterval({ start, end: now });
+    
+    const countsByDate: Record<string, number> = {};
     for (const c of completions) {
       const d = c.completed_date.slice(0, 10);
-      if (!byDate[d]) byDate[d] = {};
-      byDate[d][c.habit_id] = 1;
+      countsByDate[d] = (countsByDate[d] || 0) + 1;
     }
-    const dates = Object.keys(byDate).sort();
-    return dates.map((d) => {
-      const row: Record<string, string | number> = {
-        date: format(parseISO(d + "T12:00:00"), "MMM d"),
+
+    return interval.map((date) => {
+      const d = format(date, "yyyy-MM-dd");
+      return {
+        date: format(date, "MMM d"),
+        total: countsByDate[d] || 0
       };
-      for (const h of habits) {
-        row[h.name] = byDate[d]?.[h.id] ? 1 : 0;
-      }
-      return row;
     });
-  }, [habits, completions]);
+  }, [completions]);
 
   if (loading) {
     return <Skeleton className="h-[300px] w-full rounded-xl" />;
@@ -52,25 +54,23 @@ export function HabitCompletionChart({
   }
 
   return (
-    <div className="h-[320px] w-full min-h-[280px] rounded-xl border border-border/60 bg-card/40 p-4">
-      <h3 className="mb-2 text-sm font-semibold">Habit completions (30 days)</h3>
+    <div className="h-[320px] w-full min-h-[280px] rounded-xl border border-white/5 bg-[#111118] p-5">
+      <h3 className="mb-4 text-sm font-semibold text-white">Habit completions (30 days)</h3>
       <ResponsiveContainer width="100%" height="90%">
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
-          <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-          <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-          <Tooltip contentStyle={{ background: "hsl(var(--card))", borderColor: "hsl(var(--border))" }} />
+        <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
+          <XAxis dataKey="date" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis allowDecimals={false} tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 'auto']} tickCount={5} />
+          <Tooltip contentStyle={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px" }} />
           <Legend />
-          {habits.slice(0, 5).map((h) => (
-            <Line
-              key={h.id}
-              type="monotone"
-              dataKey={h.name}
-              stroke={h.color}
-              strokeWidth={2}
-              dot={false}
-            />
-          ))}
+          <Line
+            type="monotone"
+            dataKey="total"
+            name="Habits completed"
+            stroke="#6366f1"
+            strokeWidth={2}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

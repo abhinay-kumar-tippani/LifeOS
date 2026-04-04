@@ -8,11 +8,11 @@ export function Footer() {
         <div>
           <div className="flex items-center gap-2 font-semibold">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="LifeOS"
               width={32}
               height={32}
-              className="h-8 w-8 shrink-0 rounded-lg object-cover"
+              className="h-10 w-10 shrink-0 rounded-lg object-cover"
             />
             LifeOS
           </div>

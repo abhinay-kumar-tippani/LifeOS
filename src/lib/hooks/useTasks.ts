@@ -1,62 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Task } from "@/types";
 
 export function useTasks(userId: string | undefined) {
-  const supabase = useMemo(() => createClient(), []);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const supabase = getSupabaseClient();
+  const queryClient = useQueryClient();
 
-  const fetchTasks = useCallback(async () => {
-    if (!userId) return;
-    const { data, error: e } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("user_id", userId)
-      .order("kanban_order", { ascending: true });
-    if (e) setError(e.message);
-    else {
-      setError(null);
-      setTasks((data ?? []) as Task[]);
-    }
-  }, [supabase, userId]);
+  const { data: tasks = [], isLoading: loading, error: queryErr, refetch: fetchTasks } = useQuery({
+    queryKey: ["tasks", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("kanban_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as Task[];
+    },
+    enabled: !!userId,
+  });
 
-  useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      await fetchTasks();
-      if (!cancelled) setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, fetchTasks]);
-
-  const createTask = useCallback(
-    async (payload: {
-      title: string;
-      description?: string | null;
-      status: Task["status"];
-      priority: Task["priority"];
-      due_date?: string | null;
-      quadrant?: Task["quadrant"] | null;
-    }) => {
-      if (!userId) return { error: "No user" as const };
+  const createMutation = useMutation({
+    mutationFn: async (payload: { title: string; description?: string | null; status: Task["status"]; priority: Task["priority"]; due_date?: string | null; quadrant?: Task["quadrant"] | null; }) => {
+      if (!userId) throw new Error("No user");
       const maxOrder =
         tasks.filter((t) => t.status === payload.status).length > 0
-          ? Math.max(
-              ...tasks.filter((t) => t.status === payload.status).map((t) => t.kanban_order ?? 0),
-            ) + 1
+          ? Math.max(...tasks.filter((t) => t.status === payload.status).map((t) => t.kanban_order ?? 0)) + 1
           : 0;
-      const { error: e } = await supabase.from("tasks").insert({
+      const { error } = await supabase.from("tasks").insert({
         user_id: userId,
         title: payload.title,
         description: payload.description ?? null,
@@ -66,50 +41,69 @@ export function useTasks(userId: string | undefined) {
         quadrant: payload.quadrant ?? null,
         kanban_order: maxOrder,
       });
-      if (e) return { error: e.message };
-      await fetchTasks();
-      return { error: null as string | null };
+      if (error) throw error;
     },
-    [supabase, userId, fetchTasks, tasks],
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", userId] });
+    }
+  });
 
-  const updateTask = useCallback(
-    async (id: string, patch: Partial<Task>) => {
-      if (!userId) return { error: "No user" as const };
-      const { error: e } = await supabase
-        .from("tasks")
-        .update(patch)
-        .eq("id", id)
-        .eq("user_id", userId);
-      if (e) return { error: e.message };
-      await fetchTasks();
-      return { error: null as string | null };
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string, patch: Partial<Task> }) => {
+      if (!userId) throw new Error("No user");
+      const { error } = await supabase.from("tasks").update(patch).eq("id", id).eq("user_id", userId);
+      if (error) throw error;
     },
-    [supabase, userId, fetchTasks],
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", userId] });
+    }
+  });
 
-  const reorderKanban = useCallback(
-    async (ordered: { id: string; status: Task["status"]; kanban_order: number }[]) => {
-      if (!userId) return { error: "No user" as const };
+  const reorderMutation = useMutation({
+    mutationFn: async (ordered: { id: string; status: Task["status"]; kanban_order: number }[]) => {
+      if (!userId) throw new Error("No user");
       for (const row of ordered) {
-        const { error: e } = await supabase
+        const { error } = await supabase
           .from("tasks")
           .update({ status: row.status, kanban_order: row.kanban_order })
           .eq("id", row.id)
           .eq("user_id", userId);
-        if (e) return { error: e.message };
+        if (error) throw error;
       }
-      await fetchTasks();
-      return { error: null as string | null };
     },
-    [supabase, userId, fetchTasks],
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+    }
+  });
+
+  const createTask = useCallback(async (payload: any) => {
+    try {
+      await createMutation.mutateAsync(payload);
+      return { error: null };
+    } catch (e: any) { return { error: e.message }; }
+  }, [createMutation]);
+
+  const updateTask = useCallback(async (id: string, patch: any) => {
+    try {
+      await updateMutation.mutateAsync({ id, patch });
+      return { error: null };
+    } catch (e: any) { return { error: e.message }; }
+  }, [updateMutation]);
+
+  const reorderKanban = useCallback(async (ordered: any) => {
+    try {
+      await reorderMutation.mutateAsync(ordered);
+      return { error: null };
+    } catch (e: any) { return { error: e.message }; }
+  }, [reorderMutation]);
 
   return {
     tasks,
     loading,
-    error,
-    fetchTasks,
+    error: queryErr?.message ?? null,
+    fetchTasks: async () => { await fetchTasks(); },
     createTask,
     updateTask,
     reorderKanban,

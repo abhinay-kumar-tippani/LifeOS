@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { formatDisplayDate } from "@/lib/utils/dates";
+import { format } from "date-fns";
 import { useUser } from "@/lib/hooks/useUser";
 import { MobileNav } from "./MobileNav";
 import {
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
@@ -38,7 +38,7 @@ export function TopBar() {
   const pathname = usePathname();
   const { profile } = useUser();
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
   const title = titleFromPath(pathname);
 
   async function logout() {
@@ -48,19 +48,16 @@ export function TopBar() {
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur-md sm:px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-sidebar/80 px-4 backdrop-blur-md sm:px-6">
       <div className="flex items-center gap-3">
         <MobileNav />
         <div>
           <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
-          <p className="hidden text-xs text-muted-foreground sm:block">
-            {formatDisplayDate(new Date())}
-          </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="hidden text-sm text-muted-foreground sm:inline">
-          Today, {formatDisplayDate(new Date())}
+        <span className="hidden text-sm text-gray-400 sm:inline">
+          Today, {format(new Date(), "EEEE, MMMM d, yyyy")}
         </span>
         <Separator orientation="vertical" className="hidden h-6 sm:block" />
         <DropdownMenu>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { format, subDays } from "date-fns";
+import { startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, format } from "date-fns";
 import { useUser } from "@/lib/hooks/useUser";
 import { useHabits } from "@/lib/hooks/useHabits";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -29,23 +29,21 @@ export default function HabitsPage() {
     archiveHabit,
   } = useHabits(uid);
 
+  const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
+
   const days = useMemo(() => {
-    const end = new Date();
-    const start = subDays(end, 29);
-    const out: string[] = [];
-    for (let i = 0; i < 30; i++) {
-      out.push(format(subDays(end, 29 - i), "yyyy-MM-dd"));
-    }
-    return out;
-  }, []);
+    const start = startOfMonth(currentMonth);
+    const end = endOfMonth(currentMonth);
+    return eachDayOfInterval({ start, end }).map((d) => format(d, "yyyy-MM-dd"));
+  }, [currentMonth]);
 
   const startDate = days[0]!;
   const endDate = days[days.length - 1]!;
 
   useEffect(() => {
     if (!uid) return;
-    void fetchCompletions(startDate, endDate);
-  }, [uid, startDate, endDate, fetchCompletions]);
+    void fetchCompletions();
+  }, [uid, fetchCompletions]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Habit | null>(null);
@@ -57,9 +55,9 @@ export default function HabitsPage() {
       );
       const { error: e } = await toggleCompletion(habitId, date, isDone);
       if (e) toast.error(e);
-      else await fetchCompletions(startDate, endDate);
+      else await fetchCompletions();
     },
-    [completions, toggleCompletion, fetchCompletions, startDate, endDate],
+    [completions, toggleCompletion, fetchCompletions],
   );
 
   if (error) {
@@ -72,15 +70,17 @@ export default function HabitsPage() {
         title="My Habits"
         description="30-day grid — tap cells to mark progress."
         action={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-            aria-label="Add habit"
-          >
-            Add Habit
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+              aria-label="Add habit"
+            >
+              Add Habit
+            </Button>
+          </div>
         }
       />
 
@@ -97,7 +97,20 @@ export default function HabitsPage() {
           }}
         />
       ) : (
-        <HabitGrid habits={habits} days={days} completions={completions} onToggle={onToggle} loading={loading} />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">{format(currentMonth, "MMMM yyyy")}</h2>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                &lt; Prev
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                Next &gt;
+              </Button>
+            </div>
+          </div>
+          <HabitGrid habits={habits} days={days} completions={completions} onToggle={onToggle} loading={loading} />
+        </div>
       )}
 
       <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

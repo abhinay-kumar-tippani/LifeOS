@@ -10,7 +10,7 @@ import { MoodSelector } from "./MoodSelector";
 import { uploadFileToApi } from "@/lib/cloudinary/upload";
 import { Loader2, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
+import { CloudinaryImage } from "@/components/ui/CloudinaryImage";
 
 export function JournalEditor({
   entry,
@@ -186,7 +186,7 @@ export function JournalEditor({
         </div>
         {imageUrl ? (
           <div className="relative mt-2 aspect-video max-h-64 overflow-hidden rounded-lg border">
-            <Image src={imageUrl} alt="" fill className="object-cover" sizes="(max-width:768px) 100vw, 768px" />
+            <CloudinaryImage url={imageUrl} alt="" width={768} height={432} className="h-full w-full object-cover" />
           </div>
         ) : null}
       </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +35,7 @@ type Values = z.infer<typeof schema>;
 export function SignupForm() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),

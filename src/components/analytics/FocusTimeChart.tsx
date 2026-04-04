@@ -46,7 +46,7 @@ export function FocusTimeChart({
           </defs>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
           <XAxis dataKey="day" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
-          <YAxis tick={{ fill: "#a1a1aa", fontSize: 11 }} />
+          <YAxis tick={{ fill: "#a1a1aa", fontSize: 11 }} allowDecimals={false} domain={[0, 'auto']} tickCount={5} />
           <Tooltip
             contentStyle={{ background: "#18181b", borderColor: "#27272a" }}
             labelStyle={{ color: "#e4e4e7" }}

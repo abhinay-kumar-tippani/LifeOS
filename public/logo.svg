@@ -2,18 +2,20 @@
   <!-- Background -->
   <rect width="512" height="512" rx="120" fill="#0b0f1a"/>
 
-  <!-- L Shape -->
-  <path d="M150 140 V340 H300" stroke="#E5E7EB" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(256, 256) scale(1.4) translate(-256, -256)">
+    <!-- L Shape -->
+    <path d="M150 140 V340 H300" stroke="#E5E7EB" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Progress Arc -->
-  <path d="M260 120 A160 160 0 0 1 400 260" stroke="#6366F1" stroke-width="24" stroke-linecap="round"/>
+    <!-- Progress Arc -->
+    <path d="M260 120 A160 160 0 0 1 400 260" stroke="#6366F1" stroke-width="24" stroke-linecap="round"/>
 
-  <!-- Checkmark -->
-  <path d="M260 260 L290 290 L340 230" stroke="#6366F1" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Checkmark -->
+    <path d="M260 260 L290 290 L340 230" stroke="#6366F1" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Grid (dashboard hint) -->
-  <rect x="320" y="300" width="20" height="20" rx="4" fill="#6366F1"/>
-  <rect x="350" y="300" width="20" height="20" rx="4" fill="#6366F1"/>
-  <rect x="320" y="330" width="20" height="20" rx="4" fill="#6366F1"/>
-  <rect x="350" y="330" width="20" height="20" rx="4" fill="#6366F1"/>
+    <!-- Grid (dashboard hint) -->
+    <rect x="320" y="300" width="20" height="20" rx="4" fill="#6366F1"/>
+    <rect x="350" y="300" width="20" height="20" rx="4" fill="#6366F1"/>
+    <rect x="320" y="330" width="20" height="20" rx="4" fill="#6366F1"/>
+    <rect x="350" y="330" width="20" height="20" rx="4" fill="#6366F1"/>
+  </g>
 </svg>

@@ -37,8 +37,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!uid) return;
-    void fetchCompletions(today, today);
-  }, [uid, today, fetchCompletions]);
+    void fetchCompletions();
+  }, [uid, fetchCompletions]);
 
   const quote = useMemo(() => QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length], []);
 
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                       onCheckedChange={async () => {
                         const { error } = await toggleCompletion(h.id, today, checked);
                         if (error) toast.error(error);
-                        else await fetchCompletions(today, today);
+                        else await fetchCompletions();
                       }}
                       aria-label={`Complete ${h.name}`}
                     />
