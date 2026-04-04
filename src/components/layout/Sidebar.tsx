@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
+import { usePomodoroStore } from "@/lib/stores/pomodoroStore";
 import { cn } from "@/lib/utils/cn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ export function Sidebar({
   const router = useRouter();
   const { profile } = useUser();
   const supabase = getSupabaseClient();
+  const { isRunning, timeLeft } = usePomodoroStore();
 
   const [collapsed, setCollapsed] = useState(false);
 
@@ -133,7 +135,7 @@ export function Sidebar({
                   href={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors cursor-pointer",
                     collapsed && "justify-center",
                     active
                       ? "bg-indigo-600/20 text-indigo-400 font-medium border-l-2 border-indigo-500"
@@ -149,6 +151,12 @@ export function Sidebar({
                   >
                     {item.label}
                   </span>
+                  {item.href === "/pomodoro" && isRunning && (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-green-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      {Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2,'0')}
+                    </span>
+                  )}
                 </Link>
               );
 

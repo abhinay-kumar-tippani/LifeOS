@@ -22,7 +22,7 @@ const titles: Record<string, string> = {
   "/pomodoro": "Pomodoro",
   "/tasks": "Kanban",
   "/matrix": "Eisenhower Matrix",
-      "/analytics": "Analytics",
+  "/analytics": "Analytics",
   "/settings": "Settings",
 };
 
@@ -57,7 +57,7 @@ export function TopBar() {
       </div>
       <div className="flex items-center gap-2">
         <span className="hidden text-sm text-gray-400 sm:inline">
-          Today, {format(new Date(), "EEEE, MMMM d, yyyy")}
+          {format(new Date(), "hh:mm a, EEEE, MMMM d, yyyy")}
         </span>
         <Separator orientation="vertical" className="hidden h-6 sm:block" />
         <DropdownMenu>

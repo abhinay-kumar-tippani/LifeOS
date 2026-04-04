@@ -84,10 +84,10 @@ export function HabitCard({
       </div>
 
       <div className="flex gap-2 border-t border-gray-700/50 pt-3">
-        <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white" onClick={onEdit}>
+        <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white cursor-pointer" onClick={onEdit}>
           Edit
         </Button>
-        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300" onClick={onArchive}>
+        <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 cursor-pointer" onClick={onArchive}>
           Archive
         </Button>
       </div>

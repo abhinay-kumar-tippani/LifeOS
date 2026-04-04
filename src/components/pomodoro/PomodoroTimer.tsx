@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import type { Task } from "@/types";
 import {
   Select,
@@ -9,10 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TimerControls, beep } from "./TimerControls";
+import { TimerControls } from "./TimerControls";
 import { cn } from "@/lib/utils/cn";
-
-type Phase = "work" | "short" | "long";
+import { usePomodoroStore } from "@/lib/stores/pomodoroStore";
 
 const WORK_OPTIONS = [15, 25, 50] as const;
 
@@ -23,127 +22,75 @@ export function PomodoroTimer({
   tasks: Task[];
   onWorkComplete: (payload: { taskId: string | null; durationMinutes: number }) => Promise<void>;
 }) {
-  const [workMin, setWorkMin] = useState<15 | 25 | 50>(25);
-  const [phase, setPhase] = useState<Phase>("work");
-  const [cycleIndex, setCycleIndex] = useState(0);
-  const [leftSec, setLeftSec] = useState(workMin * 60);
-  const [running, setRunning] = useState(false);
-  const [taskId, setTaskId] = useState<string | null>(null);
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const phaseRef = useRef(phase);
-  const workMinRef = useRef(workMin);
-  const taskIdRef = useRef(taskId);
-  const cycleRef = useRef(cycleIndex);
+  const {
+    timeLeft,
+    isRunning,
+    setIsRunning,
+    sessionType,
+    sessionCount,
+    reset,
+    totalSeconds,
+    taskId,
+    setTaskId,
+    setTimeLeft,
+    setTotalSeconds
+  } = usePomodoroStore();
+
+  const prevSessionCount = useRef(sessionCount);
 
   useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
-  useEffect(() => {
-    workMinRef.current = workMin;
-  }, [workMin]);
-  useEffect(() => {
-    taskIdRef.current = taskId;
-  }, [taskId]);
-  useEffect(() => {
-    cycleRef.current = cycleIndex;
-  }, [cycleIndex]);
+    // If the session count increased, it means a session just finished!
+    // We log it here if they happen to be on the page.
+    if (sessionCount > prevSessionCount.current) {
+      if (sessionType !== "work") {
+        // The one that just finished WAS work, since it switched TO break
+        // Actually, wait, sessionCount increments on work completion.
+        onWorkComplete({ taskId, durationMinutes: totalSeconds / 60 }).catch(() => {});
+      }
+      prevSessionCount.current = sessionCount;
+    }
+  }, [sessionCount, sessionType, onWorkComplete, taskId, totalSeconds]);
 
-  const segmentLen = useMemo(() => {
-    if (phase === "work") return workMin * 60;
-    if (phase === "short") return 5 * 60;
-    return 15 * 60;
-  }, [phase, workMin]);
-
-  useEffect(() => {
-    if (!running) return;
-    tickRef.current = setInterval(() => {
-      setLeftSec((s) => {
-        if (s <= 1) {
-          beep();
-          const ph = phaseRef.current;
-          const wm = workMinRef.current;
-          const tid = taskIdRef.current;
-          const cyc = cycleRef.current;
-          queueMicrotask(async () => {
-            setRunning(false);
-            if (ph === "work") {
-              await onWorkComplete({ taskId: tid, durationMinutes: wm });
-              const nextCycle = cyc + 1;
-              setCycleIndex(nextCycle);
-              if (nextCycle % 4 === 0) {
-                if (typeof window !== "undefined" && window.confirm("Start long break (15m)?")) {
-                  setPhase("long");
-                } else {
-                  setPhase("work");
-                }
-              } else if (typeof window !== "undefined" && window.confirm("Start short break (5m)?")) {
-                setPhase("short");
-              } else {
-                setPhase("work");
-              }
-            } else {
-              if (typeof window !== "undefined" && window.confirm("Start next focus session?")) {
-                setPhase("work");
-              }
-            }
-          });
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => {
-      if (tickRef.current) clearInterval(tickRef.current);
-    };
-  }, [running, onWorkComplete]);
-
-  useEffect(() => {
-    setLeftSec(segmentLen);
-  }, [phase, segmentLen]);
-
-  const mm = Math.floor(leftSec / 60)
+  const mm = Math.floor(timeLeft / 60)
     .toString()
     .padStart(2, "0");
-  const ss = (leftSec % 60).toString().padStart(2, "0");
-  const progress = segmentLen > 0 ? 1 - leftSec / segmentLen : 0;
-
-  const reset = useCallback(() => {
-    setRunning(false);
-    setLeftSec(segmentLen);
-  }, [segmentLen]);
+  const ss = (timeLeft % 60).toString().padStart(2, "0");
+  const progress = totalSeconds > 0 ? 1 - timeLeft / totalSeconds : 0;
 
   return (
     <div className="mx-auto max-w-md space-y-8 text-center">
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Select
-          value={String(workMin)}
+          value={String(totalSeconds / 60)}
           onValueChange={(v) => {
             const n = Number(v) as 15 | 25 | 50;
-            setWorkMin(n);
-            if (phase === "work") setLeftSec(n * 60);
+            if (sessionType === 'work') {
+              setTimeLeft(n * 60);
+              setTotalSeconds(n * 60);
+            }
           }}
         >
-          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Work duration">
+          <SelectTrigger className="w-full sm:w-[180px] cursor-pointer" aria-label="Work duration">
             <SelectValue placeholder="Duration" />
           </SelectTrigger>
           <SelectContent>
             {WORK_OPTIONS.map((m) => (
-              <SelectItem key={m} value={String(m)}>
+              <SelectItem key={m} value={String(m)} className="cursor-pointer">
                 {m} min focus
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={taskId ?? "none"} onValueChange={(v) => setTaskId(v === "none" ? null : v)}>
-          <SelectTrigger className="w-full sm:w-[220px]" aria-label="Linked task">
+          <SelectTrigger className="w-full sm:w-[220px] cursor-pointer" aria-label="Linked task">
             <SelectValue placeholder="Task" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">No task</SelectItem>
+            <SelectItem value="none" className="cursor-pointer">No task</SelectItem>
             {tasks
               .filter((t) => t.status !== "done")
               .map((t) => (
-                <SelectItem key={t.id} value={t.id}>
+                <SelectItem key={t.id} value={t.id} className="cursor-pointer">
                   {t.title}
                 </SelectItem>
               ))}
@@ -152,8 +99,8 @@ export function PomodoroTimer({
       </div>
 
       <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        {phase === "work" ? "Focus" : phase === "short" ? "Short break" : "Long break"} · Session{" "}
-        {(cycleIndex % 4) + 1} of 4
+        {sessionType === "work" ? "Focus" : sessionType === "break" ? "Short break" : "Long break"} · Session{" "}
+        {(sessionCount % 4) + 1} of 4
       </p>
 
       <div className="relative mx-auto h-56 w-56">
@@ -180,9 +127,9 @@ export function PomodoroTimer({
       </div>
 
       <TimerControls
-        running={running}
-        onStart={() => setRunning(true)}
-        onPause={() => setRunning(false)}
+        running={isRunning}
+        onStart={() => setIsRunning(true)}
+        onPause={() => setIsRunning(false)}
         onReset={reset}
         onSkip={reset}
       />

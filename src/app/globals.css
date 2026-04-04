@@ -4,3 +4,23 @@
 @import "tw-animate-css";
 
 @import "../styles/theme.css";
+
+button {
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+a {
+  cursor: pointer;
+}
+
+[role="button"] {
+  cursor: pointer;
+}
+
+select {
+  cursor: pointer;
+}

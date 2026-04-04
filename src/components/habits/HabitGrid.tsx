@@ -120,13 +120,13 @@ export function HabitGrid({
                       isLastInWeek && "border-r border-gray-700/50"
                     )}
                   >
-                    <div className="flex justify-center flex-col items-center gap-1">
+                    <div className="flex justify-center flex-col items-center gap-1 cursor-pointer">
                       <Checkbox
                         checked={isDone}
                         onCheckedChange={() => onToggle(h.id, d)}
                         aria-label={`Toggle ${h.name} on ${d}`}
                         className={cn(
-                          "h-[28px] w-[28px] rounded-md border flex items-center justify-center transition-colors",
+                          "h-[28px] w-[28px] rounded-md border flex items-center justify-center transition-colors cursor-pointer",
                           isDone ? `border-transparent text-white ${hColor.bg}` : "bg-transparent"
                         )}
                         style={isDone ? {} : { borderColor: `${hColor.hex}40` }}
