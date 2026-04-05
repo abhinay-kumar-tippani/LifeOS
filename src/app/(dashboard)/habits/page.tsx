@@ -50,6 +50,13 @@ export default function HabitsPage() {
 
   const onToggle = useCallback(
     async (habitId: string, date: string) => {
+      // SECURITY GUARD: Only allow toggling today's date
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      if (date !== todayStr) {
+        console.warn("Cannot toggle habit for non-today date");
+        return;
+      }
+
       const isDone = completions.some(
         (c) => c.habit_id === habitId && c.completed_date.slice(0, 10) === date,
       );

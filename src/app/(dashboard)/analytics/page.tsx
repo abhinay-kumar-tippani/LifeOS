@@ -36,6 +36,8 @@ export default function AnalyticsPage() {
 
   const monthCompletions = data.completionsLast30.length;
   const longestStreak = Math.max(0, ...data.streaksByHabit.map((s) => s.streak));
+  const { chartStartDate, accountAgeDays } = data;
+  const completionsLabel = accountAgeDays < 30 ? "Completions (since joined)" : "Completions (30d)";
   
   const focusMin = data.pomodoro14.filter(p => p.completed).reduce((acc, p) => acc + p.duration_minutes, 0);
   const score = data.productivity.score;
@@ -51,7 +53,7 @@ export default function AnalyticsPage() {
         <div className="rounded-2xl border border-white/5 bg-[#111118] p-6 transition hover:border-white/10">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Habit completions this month</p>
+              <p className="text-sm text-gray-400">{completionsLabel}</p>
               <h3 className="mt-1 text-4xl font-bold text-white">{monthCompletions}</h3>
             </div>
             <div className="rounded-lg bg-indigo-500/15 p-2 text-indigo-500">
@@ -106,7 +108,7 @@ export default function AnalyticsPage() {
 
       <div className="grid gap-6 lg:grid-cols-4">
         <div className="lg:col-span-3">
-          <HabitCompletionChart habits={data.habits} completions={data.completionsLast30} loading={loading} />
+          <HabitCompletionChart habits={data.habits} completions={data.completionsLast30} loading={loading} chartStartDate={chartStartDate} />
         </div>
         <div className="lg:col-span-1">
           <HabitPieChart habits={data.habits} completions={data.completionsLast30} />

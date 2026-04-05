@@ -11,23 +11,27 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, parseISO, subDays, eachDayOfInterval } from "date-fns";
+import { format, parseISO, eachDayOfInterval, differenceInDays } from "date-fns";
 import type { Habit, HabitCompletion } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getHabitColor } from "@/lib/utils/habitColors";
+import { BarChart2 } from "lucide-react";
 
 export function HabitCompletionChart({
   habits,
   completions,
   loading,
+  chartStartDate,
 }: {
   habits: Habit[];
   completions: HabitCompletion[];
   loading: boolean;
+  /** ISO date string for the start of the chart window */
+  chartStartDate?: string;
 }) {
   const data = useMemo(() => {
     const now = new Date();
-    const start = subDays(now, 29);
+    const start = chartStartDate ? new Date(chartStartDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
     const interval = eachDayOfInterval({ start, end: now });
     
     const countsByDate: Record<string, number> = {};
@@ -43,10 +47,24 @@ export function HabitCompletionChart({
         total: countsByDate[d] || 0
       };
     });
-  }, [completions]);
+  }, [completions, chartStartDate]);
+
+  const dayCount = data.length;
 
   if (loading) {
     return <Skeleton className="h-[300px] w-full rounded-xl" />;
+  }
+
+  // New account with only 1 day of data — show encouraging empty state
+  if (dayCount <= 1) {
+    return (
+      <div className="flex h-[320px] w-full flex-col items-center justify-center gap-3 rounded-xl border border-white/5 bg-[#111118] p-5">
+        <BarChart2 className="h-8 w-8 text-gray-600" />
+        <p className="max-w-xs text-center text-sm text-gray-500">
+          Your analytics will appear here as you build your streak. Start checking off habits today!
+        </p>
+      </div>
+    );
   }
 
   if (habits.length === 0 || data.length === 0) {
@@ -55,7 +73,9 @@ export function HabitCompletionChart({
 
   return (
     <div className="h-[320px] w-full min-h-[280px] rounded-xl border border-white/5 bg-[#111118] p-5">
-      <h3 className="mb-4 text-sm font-semibold text-white">Habit completions (30 days)</h3>
+      <h3 className="mb-4 text-sm font-semibold text-white">
+        Habit completions ({dayCount < 30 ? "since joined" : "30 days"})
+      </h3>
       <ResponsiveContainer width="100%" height="90%">
         <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />

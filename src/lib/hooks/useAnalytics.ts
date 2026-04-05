@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { computeProductivityScore } from "@/lib/utils/productivity";
@@ -20,6 +20,10 @@ export type AnalyticsData = {
   streaksByHabit: { habitId: string; name: string; streak: number; color: string }[];
   heatmap12w: { date: string; ratio: number }[];
   pomodoroTodayCount: number;
+  /** ISO date string — the effective start of chart data (max of 30daysAgo vs accountCreatedAt) */
+  chartStartDate: string;
+  /** How many calendar days the account has existed (0 = created today) */
+  accountAgeDays: number;
 };
 
 export function useAnalytics(userId: string | undefined) {
@@ -30,11 +34,28 @@ export function useAnalytics(userId: string | undefined) {
     queryFn: async () => {
       if (!userId) throw new Error("No user");
       const today = format(new Date(), "yyyy-MM-dd");
-      const d30 = format(subDays(new Date(), 29), "yyyy-MM-dd");
-      const d14 = format(subDays(new Date(), 13), "yyyy-MM-dd");
-      const weekStart = format(subDays(new Date(), 6), "yyyy-MM-dd");
       const heatStart = format(subDays(new Date(), 7 * 12 - 1), "yyyy-MM-dd");
-      
+      const weekStart = format(subDays(new Date(), 6), "yyyy-MM-dd");
+
+      // -- Fetch account creation date first --
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("created_at")
+        .eq("id", userId)
+        .single();
+
+      const accountCreatedAt = profileData?.created_at
+        ? startOfDay(new Date(profileData.created_at))
+        : subDays(startOfDay(new Date()), 29);
+
+      const thirtyDaysAgo = subDays(startOfDay(new Date()), 29);
+      // chartStartDate = the later of (30daysAgo) and (accountCreatedAt)
+      const chartStartDateObj = accountCreatedAt > thirtyDaysAgo ? accountCreatedAt : thirtyDaysAgo;
+      const chartStartDate = format(chartStartDateObj, "yyyy-MM-dd");
+      const accountAgeDays = differenceInDays(startOfDay(new Date()), accountCreatedAt);
+
+      const d14 = format(subDays(new Date(), 13), "yyyy-MM-dd");
+
       const [
         habitsRes,
         completionsRes,
@@ -48,7 +69,7 @@ export function useAnalytics(userId: string | undefined) {
           .from("habit_completions")
           .select("*")
           .eq("user_id", userId)
-          .gte("completed_date", d30)
+          .gte("completed_date", chartStartDate)
           .lte("completed_date", today),
         supabase
           .from("pomodoro_sessions")
@@ -154,6 +175,8 @@ export function useAnalytics(userId: string | undefined) {
         streaksByHabit,
         heatmap12w,
         pomodoroTodayCount,
+        chartStartDate,
+        accountAgeDays,
       };
       
       return result;
