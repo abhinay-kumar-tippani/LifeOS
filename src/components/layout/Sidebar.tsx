@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Target,
 } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
@@ -35,6 +36,7 @@ const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/habits", label: "Habits", icon: CheckSquare },
   { href: "/journal", label: "Journal", icon: BookOpen },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/pomodoro", label: "Pomodoro", icon: Timer },
   { href: "/tasks", label: "Tasks", icon: Kanban },
   { href: "/matrix", label: "Matrix", icon: Grid2x2 },

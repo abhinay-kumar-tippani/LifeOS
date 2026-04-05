@@ -80,3 +80,16 @@ export type Profile = {
   created_at: string;
   updated_at: string;
 };
+
+export type Goal = {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  type: 'main' | 'monthly' | 'weekly';
+  status: 'active' | 'completed' | 'abandoned';
+  progress: number; // 0-100
+  target_date?: string;
+  created_at: string;
+  updated_at: string;
+};
