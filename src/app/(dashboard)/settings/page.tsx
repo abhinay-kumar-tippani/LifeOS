@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -25,7 +26,10 @@ export default function SettingsPage() {
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [delOpen, setDelOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setName(profile?.full_name ?? "");
@@ -94,10 +98,82 @@ export default function SettingsPage() {
     }
   }
 
-  async function deleteAccount() {
-    if (!user) return;
-    toast.error("Delete account requires a Supabase Edge Function or admin API. Contact support.");
-    setDelOpen(false);
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleting(true)
+      setDeleteError(null)
+
+      // IMPORTANT: Use the browser supabase client only
+      // Do NOT use a server client here
+      // Import getSupabaseClient from your client singleton
+      // or use createBrowserClient directly
+      const supabase = getSupabaseClient()
+      // Replace getSupabaseClient() with however the
+      // browser supabase client is imported in this file.
+      // Look at the top of this file and use the same
+      // client that other functions in this file use.
+
+      // Get the current session
+      const { data, error: sessionError } =
+        await supabase.auth.getSession()
+
+      console.log('Session data:', data)
+      console.log('Session error:', sessionError)
+
+      if (sessionError) {
+        setDeleteError('Session error: ' + sessionError.message)
+        setDeleting(false)
+        return
+      }
+
+      if (!data.session) {
+        setDeleteError('No active session found. Please log out and log in again.')
+        setDeleting(false)
+        return
+      }
+
+      if (!data.session.access_token) {
+        setDeleteError('Access token missing. Please log out and log in again.')
+        setDeleting(false)
+        return
+      }
+
+      console.log('Access token (first 20 chars):',
+        data.session.access_token.substring(0, 20))
+
+      const edgeFunctionUrl =
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`
+
+      console.log('Calling Edge Function at:', edgeFunctionUrl)
+
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${data.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('Response status:', response.status)
+
+      if (response.ok) {
+        await supabase.auth.signOut()
+        router.push('/')
+      } else {
+        let errorMessage = 'Failed to delete account. Please try again.'
+        try {
+          const body = await response.json()
+          console.log('Error response body:', body)
+          if (body.error) errorMessage = body.error
+        } catch {}
+        setDeleteError(errorMessage)
+      }
+    } catch (err) {
+      console.error('Delete account error:', err)
+      setDeleteError('Something went wrong. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -196,9 +272,44 @@ export default function SettingsPage() {
           <Button variant="secondary" onClick={changePassword} aria-label="Change password">
             Change password
           </Button>
-          <Button variant="destructive" onClick={() => setDelOpen(true)} aria-label="Delete account">
-            Delete account
-          </Button>
+          {showDeleteConfirm ? (
+            <div className="flex flex-col gap-3 p-4 rounded-lg border border-red-500/30 bg-red-500/5">
+              <p className="text-sm text-gray-300">
+                This will permanently delete your account and all
+                your data including habits, journal entries, tasks,
+                and Pomodoro sessions. This cannot be undone.
+              </p>
+              {deleteError && (
+                <p className="text-sm text-red-400">{deleteError}</p>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                >
+                  {deleting ? 'Deleting...' : 'Yes, delete my account'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false)
+                    setDeleteError(null)
+                  }}
+                  disabled={deleting}
+                  className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-400 hover:text-red-300 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            >
+              Delete account
+            </button>
+          )}
         </CardContent>
       </Card>
 
@@ -218,15 +329,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <ConfirmDialog
-        open={delOpen}
-        onOpenChange={setDelOpen}
-        title="Delete account?"
-        description="This demo cannot erase auth users from the client. Use the Supabase dashboard or an admin API."
-        confirmLabel="I understand"
-        destructive
-        onConfirm={deleteAccount}
-      />
+
     </div>
   );
 }

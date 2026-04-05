@@ -35,6 +35,7 @@ type Values = z.infer<typeof schema>;
 export function SignupForm() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const supabase = getSupabaseClient();
 
   const form = useForm<Values>({
@@ -56,19 +57,35 @@ export function SignupForm() {
       setFormError(error.message);
       return;
     }
-    const uid = data.user?.id;
-    if (uid) {
-      await supabase.from("profiles").upsert(
-        {
-          id: uid,
-          email: values.email,
-          full_name: values.full_name,
-        },
-        { onConflict: "id" },
-      );
-    }
-    router.replace("/dashboard");
-    router.refresh();
+    setEmailSent(true);
+  }
+
+  if (emailSent) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6 text-center px-6">
+        <div className="text-5xl">📧</div>
+        <div className="flex flex-col gap-2 max-w-sm">
+          <h2 className="text-2xl font-bold text-white">
+            Check your email
+          </h2>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            We sent a confirmation link to your email address.
+            Click the link in the email to activate your
+            LifeOS account and get started.
+          </p>
+          <p className="text-gray-600 text-xs mt-2">
+            Did not receive it? Check your spam or junk folder.
+          </p>
+        </div>
+        
+        <a
+          href="/login"
+          className="text-indigo-400 hover:text-indigo-300 text-sm underline underline-offset-4 transition-colors cursor-pointer"
+        >
+          Back to login
+        </a>
+      </div>
+    );
   }
 
   return (
