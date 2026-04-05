@@ -53,10 +53,11 @@ export function LoginForm() {
 
   async function signInGoogle() {
     setFormError(null);
-    const origin = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${origin}/callback?next=${encodeURIComponent(redirect)}` },
+      options: {
+        redirectTo: `${window.location.origin}/callback?next=/dashboard`,
+      },
     });
     if (error) setFormError(error.message);
   }
