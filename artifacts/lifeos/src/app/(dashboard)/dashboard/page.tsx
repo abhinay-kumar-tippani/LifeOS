@@ -16,10 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
-import { Flame, Timer, ListChecks, BookOpen, Plus, Target, Sparkles, Info } from "lucide-react";
+import { Flame, Timer, ListChecks, BookOpen, Plus, Target, Sparkles, Info, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { todayISODate } from "@/lib/utils/dates";
 import { fireCompletionConfetti } from "@/lib/utils/confetti";
+import { cn } from "@/lib/utils/cn";
 
 const QUOTES = [
   "Small steps, consistently taken, beat perfect plans never started.",
@@ -27,6 +28,12 @@ const QUOTES = [
   "Progress loves a quiet routine.",
   "Ship the next right thing, then iterate.",
 ];
+
+const PRIORITY_STYLES: Record<string, string> = {
+  high:   "priority-high",
+  medium: "priority-medium",
+  low:    "priority-low",
+};
 
 function ProductivityScoreTooltip() {
   return (
@@ -52,12 +59,12 @@ function WeeklySparkline({ completions }: { completions: { completed_date: strin
   });
   const max = Math.max(1, ...days.map((d) => d.count));
   return (
-    <div className="flex h-16 items-end gap-1.5" aria-label="Last 7 days habit completions">
+    <div className="flex h-20 items-end gap-1.5" aria-label="Last 7 days habit completions">
       {days.map((d, i) => (
-        <div key={i} className="flex flex-1 flex-col items-center gap-1">
+        <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
           <div
-            className="w-full rounded-sm bg-primary/70 transition-all"
-            style={{ height: `${(d.count / max) * 100}%`, minHeight: 4 }}
+            className="w-full rounded-sm bg-gradient-to-t from-primary to-violet-400 transition-all duration-500"
+            style={{ height: `${Math.max(8, (d.count / max) * 100)}%` }}
             aria-label={`${d.label}: ${d.count} completions`}
           />
           <span className="text-[10px] text-muted-foreground">{d.label}</span>
@@ -65,6 +72,13 @@ function WeeklySparkline({ completions }: { completions: { completed_date: strin
       ))}
     </div>
   );
+}
+
+function formatFocusTime(minutes: number) {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 export default function DashboardPage() {
@@ -102,7 +116,7 @@ export default function DashboardPage() {
     return tasks
       .filter((t) => t.status !== "done")
       .filter((t) => t.priority === "high" || t.priority === "medium")
-      .slice(0, 3);
+      .slice(0, 4);
   }, [tasks]);
 
   const recentJournal = entries[0];
@@ -122,11 +136,7 @@ export default function DashboardPage() {
     e.preventDefault();
     const title = quickTask.trim();
     if (!title || !uid) return;
-    const { error } = await createTask({
-      title,
-      status: "todo",
-      priority: "medium",
-    });
+    const { error } = await createTask({ title, status: "todo", priority: "medium" });
     if (error) {
       toast.error("Couldn't add task");
     } else {
@@ -137,47 +147,52 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      {/* Greeting */}
+      <div className="animate-fade-up">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          {greeting}, {profile?.full_name?.split(" ")[0] ?? "friend"} <span aria-hidden>👋</span>
+          {greeting},{" "}
+          <span className="gradient-text">{profile?.full_name?.split(" ")[0] ?? "friend"}</span>{" "}
+          <span aria-hidden>👋</span>
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{quote}</p>
+        <p className="mt-1.5 text-sm italic text-muted-foreground">&ldquo;{quote}&rdquo;</p>
       </div>
 
-      {/* KPI cards — skeleton while loading */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* KPI cards */}
+      <div className="animate-fade-up-1 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {hl ? (
-          <Skeleton className="h-28 w-full rounded-xl" />
+          <>
+            <Skeleton className="h-28 w-full rounded-xl skeleton-shimmer" />
+            <Skeleton className="h-28 w-full rounded-xl skeleton-shimmer" />
+          </>
         ) : (
-          <StatCard
-            label="Habits today"
-            value={`${habitDone}/${habitTotal || "—"}`}
-            hint={`${pct}% complete`}
-            icon={<Flame className="h-4 w-4" />}
-          />
-        )}
-        {hl || al ? (
-          <Skeleton className="h-28 w-full rounded-xl" />
-        ) : (
-          <StatCard
-            label="Longest habit streak"
-            value={maxStreak ? `${maxStreak} days` : "—"}
-            hint="Across active habits"
-            icon={<Flame className="h-4 w-4" />}
-          />
+          <>
+            <StatCard
+              label="Habits today"
+              value={`${habitDone}/${habitTotal || "—"}`}
+              hint={`${pct}% complete`}
+              icon={<Flame className="h-4 w-4" />}
+              progress={pct}
+            />
+            <StatCard
+              label="Longest streak"
+              value={maxStreak ? `${maxStreak} days` : "—"}
+              hint="Across active habits"
+              icon={<Flame className="h-4 w-4" />}
+            />
+          </>
         )}
         {pl ? (
-          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl skeleton-shimmer" />
         ) : (
           <StatCard
             label="Pomodoros today"
             value={todaySessions.length}
-            hint="Sessions logged"
+            hint={focusMin > 0 ? `${formatFocusTime(focusMin)} tracked` : "No sessions yet"}
             icon={<Timer className="h-4 w-4" />}
           />
         )}
         {al ? (
-          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl skeleton-shimmer" />
         ) : (
           <StatCard
             label="Productivity score"
@@ -185,58 +200,59 @@ export default function DashboardPage() {
             hint="Weighted daily"
             icon={<ListChecks className="h-4 w-4" />}
             action={<ProductivityScoreTooltip />}
+            progress={typeof analytics?.productivity.score === "number" ? analytics.productivity.score : undefined}
           />
         )}
       </div>
 
-      {/* Quick add task bar */}
+      {/* Quick add task */}
       <form
         onSubmit={handleQuickAddTask}
-        className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-2"
+        className="animate-fade-up-2 flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-4 py-2.5 transition-colors focus-within:border-primary/40 focus-within:bg-card/60"
       >
-        <Plus className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <Plus className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <Input
           value={quickTask}
           onChange={(e) => setQuickTask(e.target.value)}
-          placeholder="Add a task…"
+          placeholder="Quick add a task…"
           aria-label="Quick add a task"
-          className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
         />
-        <Button type="submit" size="sm" disabled={!quickTask.trim()}>
+        <Button type="submit" size="sm" disabled={!quickTask.trim()} className="shrink-0 shadow-sm shadow-primary/20">
           Add
         </Button>
       </form>
 
-      {/* Goals snippet + Weekly sparkline */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="h-4 w-4" />
+      {/* Goals + Sparkline */}
+      <div className="animate-fade-up-3 grid gap-6 lg:grid-cols-2">
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Target className="h-4 w-4 text-pink-400" />
               This week&apos;s focus
             </CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/goals">All goals</Link>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+              <Link href="/goals">All goals <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent>
             {gl ? (
-              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full skeleton-shimmer" />
             ) : mainGoal || weeklyGoals.length > 0 ? (
               <div className="space-y-3">
                 {mainGoal ? (
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Main goal</p>
-                    <p className="mt-1 text-sm font-medium">{mainGoal.title}</p>
+                  <div className="rounded-lg border border-border/40 bg-primary/5 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Main goal</p>
+                    <p className="mt-0.5 text-sm font-medium">{mainGoal.title}</p>
                   </div>
                 ) : null}
                 {weeklyGoals.length > 0 ? (
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Weekly focus</p>
-                    <ul className="mt-1 space-y-1 text-sm">
+                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Weekly focus</p>
+                    <ul className="space-y-1">
                       {weeklyGoals.slice(0, 3).map((g) => (
-                        <li key={g.id} className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+                        <li key={g.id} className="flex items-center gap-2 text-sm">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
                           <span className="line-clamp-1">{g.title}</span>
                         </li>
                       ))}
@@ -255,19 +271,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4" />
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Sparkles className="h-4 w-4 text-violet-400" />
               Last 7 days
             </CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/analytics">Analytics</Link>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+              <Link href="/analytics">Analytics <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent>
             {hl ? (
-              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-20 w-full skeleton-shimmer" />
             ) : (
               <WeeklySparkline completions={completions} />
             )}
@@ -275,20 +291,28 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Habits today + Top tasks */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader>
-            <CardTitle className="text-base">Habits today</CardTitle>
+      {/* Habits + Top tasks */}
+      <div className="animate-fade-up-4 grid gap-6 lg:grid-cols-2">
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Flame className="h-4 w-4 text-orange-400" />
+              Habits today
+              {habitTotal > 0 ? (
+                <span className="ml-auto rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  {habitDone}/{habitTotal}
+                </span>
+              ) : null}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {habitsErr ? (
               <ErrorState message="Couldn't load habits." onRetry={() => window.location.reload()} />
             ) : habits.length === 0 ? (
               <EmptyState
                 title="No habits yet"
-                description="Add habits to track them from your dashboard."
-                action={{ label: "Go to Habits", href: "/habits" }}
+                description="Add habits to track them right here."
+                action={{ label: "Add a habit", href: "/habits" }}
                 className="border-0 bg-transparent py-8"
               />
             ) : (
@@ -297,7 +321,12 @@ export default function DashboardPage() {
                 return (
                   <label
                     key={h.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/40 px-3 py-2"
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
+                      checked
+                        ? "border-primary/20 bg-primary/5"
+                        : "border-border/40 hover:border-border/60 hover:bg-accent/30",
+                    )}
                   >
                     <Checkbox
                       checked={checked}
@@ -311,10 +340,15 @@ export default function DashboardPage() {
                       }}
                       aria-label={`Complete ${h.name}`}
                     />
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: h.color }} />
-                      {h.name}
+                    <span className="flex flex-1 items-center gap-2 text-sm">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: h.color }} />
+                      <span className={cn("font-medium", checked && "line-through text-muted-foreground")}>
+                        {h.name}
+                      </span>
                     </span>
+                    {checked && (
+                      <span className="text-[10px] font-medium text-primary">Done</span>
+                    )}
                   </label>
                 );
               })
@@ -322,16 +356,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Top tasks</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/tasks">Board</Link>
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <ListChecks className="h-4 w-4 text-blue-400" />
+              Top tasks
+            </CardTitle>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+              <Link href="/tasks">Board <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">
             {tl ? (
-              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full skeleton-shimmer" />
             ) : topTasks.length === 0 ? (
               <EmptyState
                 title="No priority tasks"
@@ -341,9 +378,21 @@ export default function DashboardPage() {
               />
             ) : (
               topTasks.map((t) => (
-                <div key={t.id} className="rounded-lg border border-border/40 px-3 py-2 text-sm">
-                  <span className="font-medium">{t.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{t.priority}</span>
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/40 px-3 py-2.5 transition-colors hover:border-border/60 hover:bg-accent/20"
+                >
+                  <span className="truncate text-sm font-medium">{t.title}</span>
+                  {t.priority ? (
+                    <span
+                      className={cn(
+                        "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize",
+                        PRIORITY_STYLES[t.priority] ?? "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {t.priority}
+                    </span>
+                  ) : null}
                 </div>
               ))
             )}
@@ -351,28 +400,38 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent journal + Focus */}
+      {/* Journal + Focus */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Recent journal</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/journal">Open</Link>
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <BookOpen className="h-4 w-4 text-amber-400" />
+              Recent journal
+            </CardTitle>
+            <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-muted-foreground" asChild>
+              <Link href="/journal">Open <ArrowRight className="h-3 w-3" /></Link>
             </Button>
           </CardHeader>
           <CardContent>
             {jl ? (
-              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full skeleton-shimmer" />
             ) : recentJournal ? (
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {recentJournal.entry_date} · {recentJournal.title || "Untitled"}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                    {recentJournal.entry_date}
+                  </span>
+                  {recentJournal.title ? (
+                    <span className="truncate text-xs font-medium text-muted-foreground">{recentJournal.title}</span>
+                  ) : null}
+                </div>
+                <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                  {recentJournal.content}
                 </p>
-                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{recentJournal.content}</p>
               </div>
             ) : (
               <EmptyState
-                title="No journal entries"
+                title="No entries yet"
                 description="Capture thoughts, moods, and reflections."
                 action={{ label: "Write an entry", href: "/journal/new" }}
                 className="border-0 bg-transparent py-6"
@@ -381,24 +440,42 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="h-4 w-4" />
+        <Card className="card-hover border-border/60 bg-card/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Timer className="h-4 w-4 text-emerald-400" />
               Focus today
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pl ? (
-              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full skeleton-shimmer" />
             ) : (
-              <>
-                <p className="text-2xl font-bold">{todaySessions.length} sessions</p>
-                <p className="text-sm text-muted-foreground">{focusMin} minutes tracked</p>
-                <Button className="mt-4" variant="outline" asChild>
-                  <Link href="/pomodoro">Start Pomodoro</Link>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="text-3xl font-bold tabular-nums tracking-tight">
+                    {todaySessions.length}
+                    <span className="ml-1 text-base font-normal text-muted-foreground">sessions</span>
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {focusMin > 0 ? `${formatFocusTime(focusMin)} of deep work` : "No sessions logged yet"}
+                  </p>
+                </div>
+                {todaySessions.length > 0 && (
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-emerald-500/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700"
+                      style={{ width: `${Math.min(100, (todaySessions.length / 8) * 100)}%` }}
+                    />
+                  </div>
+                )}
+                <Button variant="outline" size="sm" className="w-fit gap-1.5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300" asChild>
+                  <Link href="/pomodoro">
+                    <Timer className="h-3.5 w-3.5" />
+                    Start Pomodoro
+                  </Link>
                 </Button>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>

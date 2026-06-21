@@ -1,9 +1,12 @@
 
+import { useLocation } from "wouter";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar";
 import { CommandPalette } from "./CommandPalette";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const [pathname] = useLocation();
+
   return (
     <div className="flex min-h-screen bg-background">
       <a
@@ -17,7 +20,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
-        <main id="main-content" className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">{children}</main>
+        <main
+          id="main-content"
+          key={pathname}
+          className="page-enter flex-1 overflow-auto p-4 sm:p-6 lg:p-8"
+        >
+          {children}
+        </main>
       </div>
       <CommandPalette />
     </div>

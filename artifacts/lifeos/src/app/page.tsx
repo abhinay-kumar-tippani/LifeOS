@@ -2,6 +2,7 @@ import { Navbar } from "@/components/homepage/Navbar";
 import { HeroSection } from "@/components/homepage/HeroSection";
 import { StatsSection } from "@/components/homepage/StatsSection";
 import { FeatureSection } from "@/components/homepage/FeatureSection";
+import { TestimonialsSection } from "@/components/homepage/TestimonialsSection";
 import { CTASection } from "@/components/homepage/CTASection";
 import { FAQSection } from "@/components/homepage/FAQSection";
 import { Footer } from "@/components/homepage/Footer";
@@ -37,6 +38,7 @@ export default function HomePage() {
           </p>
         </section>
         <FeatureSection />
+        <TestimonialsSection />
         <FAQSection />
         <CTASection />
       </main>

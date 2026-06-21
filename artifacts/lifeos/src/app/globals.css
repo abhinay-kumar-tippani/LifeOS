@@ -24,3 +24,124 @@ a {
 select {
   cursor: pointer;
 }
+
+/* ─── Page entry animation ─── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Staggered children ─── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-up-1 { animation: fade-up 0.4s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-up-2 { animation: fade-up 0.4s 0.1s  cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-up-3 { animation: fade-up 0.4s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-up-4 { animation: fade-up 0.4s 0.2s  cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ─── Glow card hover ─── */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Custom scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Text selection ─── */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: inherit;
+}
+
+/* ─── Gradient text utility ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Gradient border card ─── */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), transparent 50%, rgba(139, 92, 246, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ─── Shimmer skeleton ─── */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ─── Priority badge colors ─── */
+.priority-high   { @apply bg-red-500/15   text-red-400   border-red-500/20; }
+.priority-medium { @apply bg-amber-500/15 text-amber-400 border-amber-500/20; }
+.priority-low    { @apply bg-emerald-500/15 text-emerald-400 border-emerald-500/20; }
