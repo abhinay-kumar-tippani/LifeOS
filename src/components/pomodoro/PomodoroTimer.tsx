@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Task } from "@/types";
 import {
   Select,
@@ -39,23 +39,50 @@ export function PomodoroTimer({
   const prevSessionCount = useRef(sessionCount);
 
   useEffect(() => {
-    // If the session count increased, it means a session just finished!
-    // We log it here if they happen to be on the page.
     if (sessionCount > prevSessionCount.current) {
       if (sessionType !== "work") {
-        // The one that just finished WAS work, since it switched TO break
-        // Actually, wait, sessionCount increments on work completion.
         onWorkComplete({ taskId, durationMinutes: totalSeconds / 60 }).catch(() => {});
       }
       prevSessionCount.current = sessionCount;
     }
   }, [sessionCount, sessionType, onWorkComplete, taskId, totalSeconds]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || target?.isContentEditable) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsRunning(!isRunning);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isRunning, setIsRunning]);
+
   const mm = Math.floor(timeLeft / 60)
     .toString()
     .padStart(2, "0");
   const ss = (timeLeft % 60).toString().padStart(2, "0");
   const progress = totalSeconds > 0 ? 1 - timeLeft / totalSeconds : 0;
+
+  const sessionLabel =
+    sessionType === "work" ? "Focus" : sessionType === "break" ? "Short break" : "Long break";
+  const isBreak = sessionType !== "work";
+
+  const [announcement, setAnnouncement] = useState("");
+
+  useEffect(() => {
+    const verb = isRunning ? "started" : "paused";
+    if (timeLeft === totalSeconds) {
+      setAnnouncement(`${sessionLabel} session ${verb}. ${mm} minutes remaining.`);
+    } else if (timeLeft === 0) {
+      setAnnouncement(`${sessionLabel} session completed.`);
+    } else if (timeLeft % 60 === 0) {
+      setAnnouncement(`${mm} minutes remaining of ${sessionLabel} session.`);
+    }
+  }, [isRunning, sessionType, timeLeft, mm, totalSeconds, sessionLabel]);
 
   return (
     <div className="mx-auto max-w-md space-y-8 text-center">
@@ -98,16 +125,25 @@ export function PomodoroTimer({
         </Select>
       </div>
 
-      <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        {sessionType === "work" ? "Focus" : sessionType === "break" ? "Short break" : "Long break"} · Session{" "}
-        {(sessionCount % 4) + 1} of 4
+      <p
+        className={cn(
+          "text-sm font-medium uppercase tracking-wider",
+          isBreak ? "text-emerald-500" : "text-muted-foreground",
+        )}
+      >
+        {sessionLabel} · Session {(sessionCount % 4) + 1} of 4
       </p>
 
-      <div className="relative mx-auto h-56 w-56">
+      <div
+        className={cn(
+          "relative mx-auto h-56 w-56 rounded-full transition-colors",
+          isBreak && "bg-emerald-500/10 ring-1 ring-emerald-500/30",
+        )}
+      >
         <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden>
           <circle className="text-muted/30" strokeWidth="6" stroke="currentColor" fill="none" r="42" cx="50" cy="50" />
           <circle
-            className={cn("text-primary transition-all")}
+            className={cn(isBreak ? "text-emerald-500" : "text-primary", "transition-all")}
             strokeWidth="6"
             strokeDasharray={2 * Math.PI * 42}
             strokeDashoffset={2 * Math.PI * 42 * (1 - progress)}
@@ -120,11 +156,18 @@ export function PomodoroTimer({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-4xl font-bold tabular-nums">
+          <span
+            className="font-mono text-4xl font-bold tabular-nums"
+            role="timer"
+          >
             {mm}:{ss}
           </span>
         </div>
       </div>
+
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </span>
 
       <TimerControls
         running={isRunning}
@@ -133,6 +176,10 @@ export function PomodoroTimer({
         onReset={reset}
         onSkip={reset}
       />
+
+      <p className="text-xs text-muted-foreground">
+        Tip: press <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]">Space</kbd> to start or pause
+      </p>
     </div>
   );
 }

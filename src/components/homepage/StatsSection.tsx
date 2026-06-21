@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Kanban,
   Grid2x2,
@@ -45,6 +45,8 @@ const highlights = [
 ];
 
 export function StatsSection() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <section className="border-y border-white/5 bg-white/[0.02] py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -60,10 +62,10 @@ export function StatsSection() {
             return (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.04, duration: 0.35 }}
+                transition={{ delay: shouldReduceMotion ? 0 : i * 0.04, duration: shouldReduceMotion ? 0.05 : 0.35 }}
                 className="rounded-xl border border-white/10 bg-card/40 p-5 text-left backdrop-blur-sm"
               >
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">

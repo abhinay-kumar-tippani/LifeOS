@@ -4,12 +4,13 @@ import { useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import type { Task } from "@/types";
 import { KanbanColumn } from "./KanbanColumn";
 
@@ -27,14 +28,23 @@ export function KanbanBoard({
   tasks,
   onReorder,
   onAddToColumn,
+  onEditTask,
+  onDeleteTask,
+  onMarkDone,
 }: {
   tasks: Task[];
   onReorder: (rows: { id: string; status: Task["status"]; kanban_order: number }[]) => Promise<void>;
   onAddToColumn: (status: Task["status"]) => void;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (task: Task) => Promise<void>;
+  onMarkDone?: (task: Task) => Promise<void>;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
 
@@ -118,6 +128,9 @@ export function KanbanBoard({
             title={c.title}
             tasks={grouped[c.id]}
             onAdd={() => onAddToColumn(c.id)}
+            onEditTask={onEditTask}
+            onDeleteTask={onDeleteTask}
+            onMarkDone={onMarkDone}
           />
         ))}
       </div>

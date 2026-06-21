@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
@@ -17,6 +17,7 @@ const links = [
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -27,9 +28,9 @@ export function Navbar() {
 
   return (
     <motion.header
-      initial={{ y: -12, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.35 }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { y: -12, opacity: 0 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { y: 0, opacity: 1 }}
+      transition={{ duration: shouldReduceMotion ? 0.05 : 0.35 }}
       className={cn(
         "fixed inset-x-0 top-0 z-50 border-b transition-colors",
         scrolled ? "border-white/10 bg-[#0a0a0f]/80 backdrop-blur-xl" : "border-transparent bg-transparent",
@@ -82,9 +83,9 @@ export function Navbar() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             className="border-t border-white/10 bg-[#0a0a0f]/95 md:hidden"
           >
             <div className="flex flex-col gap-2 px-4 py-4">

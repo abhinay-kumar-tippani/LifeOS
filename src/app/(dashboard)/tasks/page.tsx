@@ -6,6 +6,7 @@ import { useTasks } from "@/lib/hooks/useTasks";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KanbanBoard } from "@/components/tasks/KanbanBoard";
 import { TaskForm } from "@/components/tasks/TaskForm";
+import { TaskEditSheet } from "@/components/tasks/TaskEditSheet";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import type { Task } from "@/types";
@@ -13,9 +14,11 @@ import { toast } from "sonner";
 
 export default function TasksPage() {
   const { user } = useUser();
-  const { tasks, loading, error, createTask, reorderKanban } = useTasks(user?.id);
+  const { tasks, loading, error, createTask, updateTask, deleteTask, reorderKanban } = useTasks(user?.id);
   const [open, setOpen] = useState(false);
   const [column, setColumn] = useState<Task["status"]>("todo");
+  const [editing, setEditing] = useState<Task | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
   if (!user || loading) {
@@ -26,9 +29,18 @@ export default function TasksPage() {
     );
   }
 
+  async function handleDelete(task: Task) {
+    const { error: e } = await deleteTask(task.id);
+    if (e) {
+      toast.error(e);
+    } else {
+      toast.success("Task deleted");
+    }
+  }
+
   return (
     <div>
-      <PageHeader title="Kanban" description="Drag tasks between columns. Priority is color-coded." />
+      <PageHeader title="Tasks" description="Drag tasks between columns. Click any card to edit." />
       <KanbanBoard
         tasks={tasks}
         onReorder={async (rows) => {
@@ -39,6 +51,11 @@ export default function TasksPage() {
           setColumn(s);
           setOpen(true);
         }}
+        onEditTask={(t) => {
+          setEditing(t);
+          setSheetOpen(true);
+        }}
+        onDeleteTask={handleDelete}
       />
       <TaskForm
         open={open}
@@ -55,6 +72,20 @@ export default function TasksPage() {
           if (e) toast.error(e);
           else toast.success("Task created");
           return { error: e };
+        }}
+      />
+      <TaskEditSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        task={editing}
+        onUpdate={async (id, patch) => {
+          const { error: e } = await updateTask(id, patch);
+          if (e) {
+            toast.error(e);
+            return { error: e };
+          }
+          toast.success("Task updated");
+          return { error: null };
         }}
       />
     </div>

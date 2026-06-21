@@ -5,7 +5,7 @@ import { format, subDays, parseISO, differenceInDays, startOfDay } from "date-fn
 import { useQuery } from "@tanstack/react-query";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { computeProductivityScore } from "@/lib/utils/productivity";
-import { calculateStreak, datesSetFromCompletions } from "@/lib/utils/streaks";
+import { calculateStreak, calculateBestStreak, datesSetFromCompletions } from "@/lib/utils/streaks";
 import type { Habit, HabitCompletion, PomodoroSession } from "@/types";
 
 export type AnalyticsData = {
@@ -17,20 +17,24 @@ export type AnalyticsData = {
   habitsTotal: number;
   habitsCompletedToday: number;
   productivity: ReturnType<typeof computeProductivityScore>;
-  streaksByHabit: { habitId: string; name: string; streak: number; color: string }[];
+  streaksByHabit: { habitId: string; name: string; streak: number; bestStreak: number; color: string }[];
   heatmap12w: { date: string; ratio: number }[];
   pomodoroTodayCount: number;
+  /** Completions in the 30 days before the current chart window */
+  completionsPrevious30: number;
+  /** Chart window length in calendar days */
+  windowDays: number;
   /** ISO date string — the effective start of chart data (max of 30daysAgo vs accountCreatedAt) */
   chartStartDate: string;
   /** How many calendar days the account has existed (0 = created today) */
   accountAgeDays: number;
 };
 
-export function useAnalytics(userId: string | undefined) {
+export function useAnalytics(userId: string | undefined, rangeDays: number = 30) {
   const supabase = getSupabaseClient();
 
   const { data, isLoading: loading, error: queryErr, refetch } = useQuery({
-    queryKey: ["analytics", userId],
+    queryKey: ["analytics", userId, rangeDays],
     queryFn: async () => {
       if (!userId) throw new Error("No user");
       const today = format(new Date(), "yyyy-MM-dd");
@@ -46,30 +50,55 @@ export function useAnalytics(userId: string | undefined) {
 
       const accountCreatedAt = profileData?.created_at
         ? startOfDay(new Date(profileData.created_at))
-        : subDays(startOfDay(new Date()), 29);
+        : subDays(startOfDay(new Date()), rangeDays - 1);
 
-      const thirtyDaysAgo = subDays(startOfDay(new Date()), 29);
-      // chartStartDate = the later of (30daysAgo) and (accountCreatedAt)
-      const chartStartDateObj = accountCreatedAt > thirtyDaysAgo ? accountCreatedAt : thirtyDaysAgo;
+      const periodStartAgo = subDays(startOfDay(new Date()), rangeDays - 1);
+      // chartStartDate = the later of (periodStartAgo) and (accountCreatedAt)
+      const chartStartDateObj = accountCreatedAt > periodStartAgo ? accountCreatedAt : periodStartAgo;
       const chartStartDate = format(chartStartDateObj, "yyyy-MM-dd");
       const accountAgeDays = differenceInDays(startOfDay(new Date()), accountCreatedAt);
 
       const d14 = format(subDays(new Date(), 13), "yyyy-MM-dd");
+      const previousPeriodStartObj = subDays(chartStartDateObj, rangeDays);
+      const previousPeriodStart = format(previousPeriodStartObj, "yyyy-MM-dd");
+      const streakStart = format(
+        subDays(startOfDay(new Date()), Math.max(accountAgeDays, 364)),
+        "yyyy-MM-dd",
+      );
+
+      const showArchived =
+        typeof window !== "undefined" && localStorage.getItem("lifeos-archived") === "1";
+
+      const habitsQuery = supabase.from("habits").select("*").eq("user_id", userId);
 
       const [
         habitsRes,
         completionsRes,
+        completionsPrevRes,
+        completionsStreakRes,
         pomRes,
         journalRes,
         completionsHeatRes,
         tasksDoneRes,
       ] = await Promise.all([
-        supabase.from("habits").select("*").eq("user_id", userId).eq("is_archived", false),
+        habitsQuery,
         supabase
           .from("habit_completions")
           .select("*")
           .eq("user_id", userId)
           .gte("completed_date", chartStartDate)
+          .lte("completed_date", today),
+        supabase
+          .from("habit_completions")
+          .select("*")
+          .eq("user_id", userId)
+          .gte("completed_date", previousPeriodStart)
+          .lt("completed_date", chartStartDate),
+        supabase
+          .from("habit_completions")
+          .select("*")
+          .eq("user_id", userId)
+          .gte("completed_date", streakStart)
           .lte("completed_date", today),
         supabase
           .from("pomodoro_sessions")
@@ -100,6 +129,8 @@ export function useAnalytics(userId: string | undefined) {
       const e =
         habitsRes.error ||
         completionsRes.error ||
+        completionsPrevRes.error ||
+        completionsStreakRes.error ||
         pomRes.error ||
         journalRes.error ||
         completionsHeatRes.error ||
@@ -108,8 +139,13 @@ export function useAnalytics(userId: string | undefined) {
         throw new Error(e.message);
       }
 
-      const habits = (habitsRes.data ?? []) as Habit[];
+      const habits = ((habitsRes.data ?? []) as Habit[]).filter(
+        (h) => showArchived || !h.is_archived,
+      );
       const completionsLast30 = (completionsRes.data ?? []) as HabitCompletion[];
+      const completionsPrevious30 = (completionsPrevRes.data ?? []).length;
+      const completionsForStreaks = (completionsStreakRes.data ?? []) as HabitCompletion[];
+      const windowDays = Math.max(1, differenceInDays(startOfDay(new Date()), chartStartDateObj) + 1);
       const pomodoro14 = (pomRes.data ?? []) as PomodoroSession[];
       const journalWeekCount = journalRes.data?.length ?? 0;
       const heatCompletions = (completionsHeatRes.data ?? []) as HabitCompletion[];
@@ -136,12 +172,13 @@ export function useAnalytics(userId: string | undefined) {
       });
 
       const streaksByHabit = habits.map((h) => {
-        const dates = datesSetFromCompletions(heatCompletions, h.id);
+        const dates = datesSetFromCompletions(completionsForStreaks, h.id);
         return {
           habitId: h.id,
           name: h.name,
           color: h.color,
           streak: calculateStreak(dates, h.id, new Date()),
+          bestStreak: calculateBestStreak(dates),
         };
       });
       streaksByHabit.sort((a, b) => b.streak - a.streak);
@@ -177,6 +214,8 @@ export function useAnalytics(userId: string | undefined) {
         pomodoroTodayCount,
         chartStartDate,
         accountAgeDays,
+        completionsPrevious30,
+        windowDays,
       };
       
       return result;

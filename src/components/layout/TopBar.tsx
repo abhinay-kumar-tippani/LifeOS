@@ -19,9 +19,10 @@ const titles: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/habits": "Habits",
   "/journal": "Journal",
+  "/goals": "Goals",
   "/pomodoro": "Pomodoro",
-  "/tasks": "Kanban",
-  "/matrix": "Eisenhower Matrix",
+  "/tasks": "Tasks",
+  "/matrix": "Matrix",
   "/analytics": "Analytics",
   "/settings": "Settings",
 };
@@ -52,7 +53,9 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <MobileNav />
         <div>
-          <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
+          <p className="text-lg font-semibold tracking-tight text-muted-foreground sm:text-xl" aria-hidden="true">
+            {title}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-2">

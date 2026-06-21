@@ -4,12 +4,13 @@ import { useMemo, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
   closestCorners,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import type { Task } from "@/types";
 import { MatrixQuadrant } from "./MatrixQuadrant";
 import {
@@ -22,36 +23,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTasks } from "@/lib/hooks/useTasks";
+import { toast } from "sonner";
 
 const Q = [
   {
     id: "q1" as const,
     label: "Do First",
     description: "Urgent + Important",
+    hint: "Crises, deadlines, problems demanding immediate action.",
     accent: "border-red-500/40 bg-red-500/5",
   },
   {
     id: "q2" as const,
     label: "Schedule",
     description: "Not Urgent + Important",
+    hint: "Long-term growth, planning, deep work — protect this time.",
     accent: "border-blue-500/40 bg-blue-500/5",
   },
   {
     id: "q3" as const,
     label: "Delegate",
     description: "Urgent + Not Important",
+    hint: "Interruptions, others' priorities — batch or hand off.",
     accent: "border-yellow-500/40 bg-yellow-500/5",
   },
   {
     id: "q4" as const,
     label: "Eliminate",
     description: "Not Urgent + Not Important",
+    hint: "Time wasters — drop or limit these.",
     accent: "border-zinc-500/40 bg-zinc-500/5",
   },
 ];
 
 export function EisenhowerGrid({ userId }: { userId: string }) {
-  const { tasks, fetchTasks, createTask, updateTask } = useTasks(userId);
+  const { tasks, fetchTasks, createTask, updateTask, deleteTask } = useTasks(userId);
   const [dialogQ, setDialogQ] = useState<Task["quadrant"] | null>(null);
   const [title, setTitle] = useState("");
 
@@ -66,7 +72,10 @@ export function EisenhowerGrid({ userId }: { userId: string }) {
     return m;
   }, [tasks]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   async function persistOrders(next: Record<string, Task[]>) {
     const updates: { id: string; quadrant: Task["quadrant"]; kanban_order: number }[] = [];
@@ -132,7 +141,7 @@ export function EisenhowerGrid({ userId }: { userId: string }) {
 
   async function addTask() {
     if (!dialogQ || !title.trim()) return;
-    await createTask({
+    const { error } = await createTask({
       title: title.trim(),
       description: null,
       status: "todo",
@@ -140,9 +149,18 @@ export function EisenhowerGrid({ userId }: { userId: string }) {
       due_date: null,
       quadrant: dialogQ,
     });
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("Task added");
+    }
     setTitle("");
     setDialogQ(null);
-    await fetchTasks();
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await deleteTask(id);
+    if (error) toast.error(error);
   }
 
   return (
@@ -155,13 +173,14 @@ export function EisenhowerGrid({ userId }: { userId: string }) {
               id={q.id}
               label={q.label}
               description={q.description}
+              hint={q.hint}
               accent={q.accent}
               tasks={byQ[q.id]}
               onAdd={() => setDialogQ(q.id)}
               onComplete={async (id) => {
                 await updateTask(id, { status: "done" });
-                await fetchTasks();
               }}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -172,7 +191,15 @@ export function EisenhowerGrid({ userId }: { userId: string }) {
           <DialogHeader>
             <DialogTitle>New matrix task</DialogTitle>
           </DialogHeader>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task title" aria-label="Task title" />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Task title"
+            aria-label="Task title"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void addTask();
+            }}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogQ(null)}>
               Cancel

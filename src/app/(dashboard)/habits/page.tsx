@@ -8,9 +8,11 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { HabitGrid } from "@/components/habits/HabitGrid";
 import { HabitCard } from "@/components/habits/HabitCard";
+import { HabitMobileList } from "@/components/habits/HabitMobileList";
 import { HabitForm } from "@/components/habits/HabitForm";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import type { Habit } from "@/types";
 import { toast } from "sonner";
 
@@ -47,13 +49,13 @@ export default function HabitsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Habit | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Habit | null>(null);
 
   const onToggle = useCallback(
     async (habitId: string, date: string) => {
-      // SECURITY GUARD: Only allow toggling today's date
       const todayStr = format(new Date(), "yyyy-MM-dd");
       if (date !== todayStr) {
-        console.warn("Cannot toggle habit for non-today date");
+        toast.error("Only today's habit can be marked from the grid. Past days are locked.");
         return;
       }
 
@@ -75,7 +77,7 @@ export default function HabitsPage() {
     <div>
       <PageHeader
         title="My Habits"
-        description="30-day grid — tap cells to mark progress."
+        description="Monthly calendar — check off today from the grid."
         action={
           <div className="flex items-center gap-3">
             <Button
@@ -116,7 +118,28 @@ export default function HabitsPage() {
               </Button>
             </div>
           </div>
-          <HabitGrid habits={habits} days={days} completions={completions} onToggle={onToggle} loading={loading} />
+
+          {/* Mobile: simple today-only checklist */}
+          <HabitMobileList
+            habits={habits}
+            completions={completions}
+            onToggle={onToggle}
+            onEdit={(h) => {
+              setEditing(h);
+              setFormOpen(true);
+            }}
+            onArchive={(h) => setArchiveTarget(h)}
+          />
+
+          {/* md+: full month grid */}
+          <div className="hidden md:block">
+            <HabitGrid habits={habits} days={days} completions={completions} onToggle={onToggle} loading={loading} />
+          </div>
+
+          {/* Persistent info banner */}
+          <div className="rounded-lg border border-border/40 bg-card/30 px-3 py-2 text-xs text-muted-foreground">
+            <strong className="text-foreground">Heads up:</strong> only today is editable. Past days are your history and can&apos;t be changed.
+          </div>
         </div>
       )}
 
@@ -130,14 +153,26 @@ export default function HabitsPage() {
               setEditing(h);
               setFormOpen(true);
             }}
-            onArchive={async () => {
-              const { error: e } = await archiveHabit(h.id);
-              if (e) toast.error(e);
-              else toast.success("Archived");
-            }}
+            onArchive={() => setArchiveTarget(h)}
           />
         ))}
       </div>
+
+      <ConfirmDialog
+        open={!!archiveTarget}
+        onOpenChange={(open) => !open && setArchiveTarget(null)}
+        title="Archive habit?"
+        description={`"${archiveTarget?.name}" will be hidden from your active list. You can show archived habits in analytics from Settings.`}
+        confirmLabel="Archive"
+        destructive
+        onConfirm={async () => {
+          if (!archiveTarget) return;
+          const { error: e } = await archiveHabit(archiveTarget.id);
+          if (e) toast.error(e);
+          else toast.success("Archived");
+          setArchiveTarget(null);
+        }}
+      />
 
       <HabitForm
         open={formOpen}

@@ -14,7 +14,6 @@ import {
 import { format, parseISO, eachDayOfInterval, differenceInDays } from "date-fns";
 import type { Habit, HabitCompletion } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getHabitColor } from "@/lib/utils/habitColors";
 import { BarChart2 } from "lucide-react";
 
 export function HabitCompletionChart({
@@ -58,9 +57,9 @@ export function HabitCompletionChart({
   // New account with only 1 day of data — show encouraging empty state
   if (dayCount <= 1) {
     return (
-      <div className="flex h-[320px] w-full flex-col items-center justify-center gap-3 rounded-xl border border-white/5 bg-[#111118] p-5">
-        <BarChart2 className="h-8 w-8 text-gray-600" />
-        <p className="max-w-xs text-center text-sm text-gray-500">
+      <div className="flex h-[320px] w-full flex-col items-center justify-center gap-3 rounded-xl border border-border/60 bg-card/40 p-5">
+        <BarChart2 className="h-8 w-8 text-muted-foreground" />
+        <p className="max-w-xs text-center text-sm text-muted-foreground">
           Your analytics will appear here as you build your streak. Start checking off habits today!
         </p>
       </div>
@@ -72,16 +71,16 @@ export function HabitCompletionChart({
   }
 
   return (
-    <div className="h-[320px] w-full min-h-[280px] rounded-xl border border-white/5 bg-[#111118] p-5">
-      <h3 className="mb-4 text-sm font-semibold text-white">
+    <div className="h-[320px] w-full min-h-[280px] rounded-xl border border-border/60 bg-card/40 p-5">
+      <h3 className="mb-4 text-sm font-semibold text-foreground">
         Habit completions ({dayCount < 30 ? "since joined" : "30 days"})
       </h3>
       <ResponsiveContainer width="100%" height="90%">
         <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
-          <XAxis dataKey="date" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis allowDecimals={false} tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 'auto']} tickCount={5} />
-          <Tooltip contentStyle={{ background: "#1f2937", border: "1px solid #374151", color: "white", borderRadius: "8px" }} />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
+          <XAxis dataKey="date" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis allowDecimals={false} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, "auto"]} tickCount={5} />
+          <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px" }} />
           <Legend />
           <Line
             type="monotone"

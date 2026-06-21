@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -12,13 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { uploadFileToApi } from "@/lib/cloudinary/upload";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { AvatarUpload } from "@/components/settings/AvatarUpload";
+import { DataExport } from "@/components/settings/DataExport";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
   const { user, profile, refreshProfile } = useUser();
   const supabase = getSupabaseClient();
+  const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
   const [name, setName] = useState(profile?.full_name ?? "");
   const [pomo, setPomo] = useState("25");
@@ -30,6 +33,13 @@ export default function SettingsPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("recovery") === "true") {
+      toast.info("Set your new password below");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setName(profile?.full_name ?? "");
@@ -55,9 +65,8 @@ export default function SettingsPage() {
     }
   }
 
-  async function onAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  async function onAvatarFile(file: File) {
+    if (!user) return;
     setUploading(true);
     try {
       const { url } = await uploadFileToApi(file);
@@ -77,7 +86,14 @@ export default function SettingsPage() {
   function savePrefs() {
     localStorage.setItem("lifeos-pomo", pomo);
     localStorage.setItem("lifeos-archived", showArchived ? "1" : "0");
-    toast.success("Preferences saved locally");
+    void queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    toast.success("Preferences saved");
+  }
+
+  function handleArchivedToggle(checked: boolean) {
+    setShowArchived(checked);
+    localStorage.setItem("lifeos-archived", checked ? "1" : "0");
+    void queryClient.invalidateQueries({ queryKey: ["analytics"] });
   }
 
   async function changePassword() {
@@ -100,81 +116,50 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     try {
-      setDeleting(true)
-      setDeleteError(null)
+      setDeleting(true);
+      setDeleteError(null);
 
-      // IMPORTANT: Use the browser supabase client only
-      // Do NOT use a server client here
-      // Import getSupabaseClient from your client singleton
-      // or use createBrowserClient directly
-      const supabase = getSupabaseClient()
-      // Replace getSupabaseClient() with however the
-      // browser supabase client is imported in this file.
-      // Look at the top of this file and use the same
-      // client that other functions in this file use.
-
-      // Get the current session
-      const { data, error: sessionError } =
-        await supabase.auth.getSession()
-
-      console.log('Session data:', data)
-      console.log('Session error:', sessionError)
+      const { data, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
-        setDeleteError('Session error: ' + sessionError.message)
-        setDeleting(false)
-        return
+        setDeleteError("Session error: " + sessionError.message);
+        return;
       }
 
-      if (!data.session) {
-        setDeleteError('No active session found. Please log out and log in again.')
-        setDeleting(false)
-        return
+      if (!data.session?.access_token) {
+        setDeleteError("No active session found. Please log out and log in again.");
+        return;
       }
 
-      if (!data.session.access_token) {
-        setDeleteError('Access token missing. Please log out and log in again.')
-        setDeleting(false)
-        return
-      }
-
-      console.log('Access token (first 20 chars):',
-        data.session.access_token.substring(0, 20))
-
-      const edgeFunctionUrl =
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`
-
-      console.log('Calling Edge Function at:', edgeFunctionUrl)
+      const edgeFunctionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`;
 
       const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${data.session.access_token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${data.session.access_token}`,
+          "Content-Type": "application/json",
         },
-      })
-
-      console.log('Response status:', response.status)
+      });
 
       if (response.ok) {
-        await supabase.auth.signOut()
-        router.push('/')
+        await supabase.auth.signOut();
+        router.push("/");
       } else {
-        let errorMessage = 'Failed to delete account. Please try again.'
+        let errorMessage = "Failed to delete account. Please try again.";
         try {
-          const body = await response.json()
-          console.log('Error response body:', body)
-          if (body.error) errorMessage = body.error
-        } catch {}
-        setDeleteError(errorMessage)
+          const body = await response.json();
+          if (body.error) errorMessage = body.error;
+        } catch {
+          /* ignore */
+        }
+        setDeleteError(errorMessage);
       }
-    } catch (err) {
-      console.error('Delete account error:', err)
-      setDeleteError('Something went wrong. Please try again.')
+    } catch {
+      setDeleteError("Something went wrong. Please try again.");
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -185,18 +170,21 @@ export default function SettingsPage() {
           <CardTitle>Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="avatar">Avatar</Label>
-            <Input id="avatar" type="file" accept="image/*" className="mt-1" onChange={onAvatar} />
-            {uploading ? <Loader2 className="mt-2 h-4 w-4 animate-spin" /> : null}
-          </div>
+          <AvatarUpload
+            name={profile?.full_name}
+            email={profile?.email}
+            avatarUrl={profile?.avatar_url}
+            uploading={uploading}
+            onFileSelect={onAvatarFile}
+          />
           <div>
             <Label htmlFor="name">Full name</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1" />
           </div>
           <div>
-            <Label>Email</Label>
-            <Input value={profile?.email ?? ""} disabled className="mt-1" />
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" value={profile?.email ?? ""} disabled className="mt-1" />
+            <p className="mt-1 text-xs text-muted-foreground">Email cannot be changed here.</p>
           </div>
           <Button onClick={saveProfile} aria-label="Save profile">
             Save profile
@@ -212,11 +200,12 @@ export default function SettingsPage() {
           <div>
             <Label htmlFor="pomo">Default Pomodoro (minutes)</Label>
             <Input id="pomo" value={pomo} onChange={(e) => setPomo(e.target.value)} className="mt-1" />
+            <p className="mt-1 text-xs text-muted-foreground">Use 15, 25, or 50. Applied to new focus sessions.</p>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border/40 px-3 py-2">
             <div>
               <p className="text-sm font-medium">Theme</p>
-              <p className="text-xs text-muted-foreground">Toggle light / dark (stored in theme)</p>
+              <p className="text-xs text-muted-foreground">Toggle light / dark</p>
             </div>
             <Switch
               checked={theme === "dark"}
@@ -224,7 +213,7 @@ export default function SettingsPage() {
               aria-label="Dark mode"
             />
           </div>
-          <Button onClick={savePrefs} variant="secondary" aria-label="Save preferences">
+          <Button onClick={savePrefs} aria-label="Save preferences">
             Save preferences
           </Button>
         </CardContent>
@@ -236,9 +225,24 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-lg border border-border/40 px-3 py-2">
-            <p className="text-sm">Show archived habits in analytics (local)</p>
-            <Switch checked={showArchived} onCheckedChange={setShowArchived} aria-label="Show archived" />
+            <div>
+              <p className="text-sm font-medium">Show archived habits in analytics</p>
+              <p className="text-xs text-muted-foreground">Saved locally on this device</p>
+            </div>
+            <Switch checked={showArchived} onCheckedChange={handleArchivedToggle} aria-label="Show archived habits" />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle>Your data</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Download all your data as a single JSON file — habits, journal entries, tasks, goals, and Pomodoro sessions.
+          </p>
+          <DataExport />
         </CardContent>
       </Card>
 
@@ -269,67 +273,25 @@ export default function SettingsPage() {
               autoComplete="new-password"
             />
           </div>
-          <Button variant="secondary" onClick={changePassword} aria-label="Change password">
+          <Button onClick={changePassword} aria-label="Change password">
             Change password
           </Button>
-          {showDeleteConfirm ? (
-            <div className="flex flex-col gap-3 p-4 rounded-lg border border-red-500/30 bg-red-500/5">
-              <p className="text-sm text-gray-300">
-                This will permanently delete your account and all
-                your data including habits, journal entries, tasks,
-                and Pomodoro sessions. This cannot be undone.
-              </p>
-              {deleteError && (
-                <p className="text-sm text-red-400">{deleteError}</p>
-              )}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleting}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
-                >
-                  {deleting ? 'Deleting...' : 'Yes, delete my account'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDeleteConfirm(false)
-                    setDeleteError(null)
-                  }}
-                  disabled={deleting}
-                  className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500/30 text-red-400 hover:text-red-300 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-            >
-              Delete account
-            </button>
-          )}
+          {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+          <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+            Delete account
+          </Button>
         </CardContent>
       </Card>
 
-      <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle>Integrations</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <p>
-            Cloudinary:{" "}
-            {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
-              <span className="text-emerald-400">configured ({process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME})</span>
-            ) : (
-              <span className="text-amber-400">set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME</span>
-            )}
-          </p>
-        </CardContent>
-      </Card>
-
-
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete your account?"
+        description="This permanently deletes your profile, habits, journal entries, tasks, and Pomodoro history. This cannot be undone."
+        confirmLabel={deleting ? "Deleting…" : "Delete account"}
+        destructive
+        onConfirm={handleDeleteAccount}
+      />
     </div>
   );
 }

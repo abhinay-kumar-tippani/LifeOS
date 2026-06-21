@@ -27,14 +27,14 @@ export function WeeklyHeatmap({
   const weekLabels = ["", "Mon", "", "Wed", "", "Fri", ""];
 
   return (
-    <div className="rounded-xl border border-white/5 bg-[#111118] p-5">
-      <h3 className="mb-4 text-sm font-semibold text-white">12-week contribution</h3>
+    <div className="rounded-xl border border-border/60 bg-card/40 p-5">
+      <h3 className="mb-4 text-sm font-semibold text-foreground">12-week contribution</h3>
       
       <div className="flex">
         {/* Left labels */}
         <div className="flex flex-col gap-[3px] pr-2 pt-[14px]">
           {weekLabels.map((lbl, i) => (
-            <div key={i} className="h-[14px] text-[10px] leading-[14px] text-gray-500 w-6">
+            <div key={i} className="h-[14px] w-6 text-[10px] leading-[14px] text-muted-foreground">
               {lbl}
             </div>
           ))}
@@ -49,7 +49,7 @@ export function WeeklyHeatmap({
             
             return (
               <div key={wi} className="flex flex-col gap-[3px]">
-                <div className="h-[14px] text-[10px] text-gray-500 mb-1">{monthLabel}</div>
+                <div className="mb-1 h-[14px] text-[10px] text-muted-foreground">{monthLabel}</div>
                 {w.map((c) => (
                   <div
                     key={c.date}
@@ -70,7 +70,7 @@ export function WeeklyHeatmap({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-end gap-2 text-xs text-gray-500">
+      <div className="mt-4 flex items-center justify-end gap-2 text-xs text-muted-foreground">
         <span>Less</span>
         <div className="flex gap-[3px]">
           <div className="h-[14px] w-[14px] rounded-sm bg-gray-800" />

@@ -1,8 +1,17 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MoreVertical } from "lucide-react";
 import type { Goal } from "@/types";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { useState } from "react";
 
 interface WeeklyGoalItemProps {
   goal: Goal;
@@ -12,6 +21,7 @@ interface WeeklyGoalItemProps {
 }
 
 export function WeeklyGoalItem({ goal, onEdit, onDelete, onToggleComplete }: WeeklyGoalItemProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const formatDate = (dateStr: string) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -20,10 +30,10 @@ export function WeeklyGoalItem({ goal, onEdit, onDelete, onToggleComplete }: Wee
   };
 
   const clampedProgress = Math.max(0, Math.min(100, goal.progress));
-  
+
   let strokeColor = "text-emerald-500";
   if (clampedProgress <= 30) {
-    strokeColor = "text-red-500";
+    strokeColor = "text-destructive";
   } else if (clampedProgress <= 60) {
     strokeColor = "text-amber-500";
   } else if (clampedProgress <= 89) {
@@ -35,23 +45,18 @@ export function WeeklyGoalItem({ goal, onEdit, onDelete, onToggleComplete }: Wee
   const strokeDashoffset = circumference - (clampedProgress / 100) * circumference;
 
   return (
-    <div className="group bg-[#0d0d14] border border-white/5 rounded-lg px-4 py-3 hover:bg-[#111118] transition-colors duration-150 flex items-center gap-3">
+    <div className="group flex items-center gap-3 rounded-lg border border-border/40 bg-card/40 px-4 py-3 transition-colors hover:bg-card/60">
       {/* LEFT: Circular progress indicator */}
-      <div 
-        className={cn("relative flex items-center justify-center shrink-0 cursor-pointer", goal.progress === 100 && "opacity-70")}
+      <button
+        className={cn(
+          "relative flex shrink-0 cursor-pointer items-center justify-center rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          goal.progress === 100 && "opacity-70",
+        )}
         onClick={() => onToggleComplete?.(goal.id, goal.status)}
+        aria-label={`Toggle completion for ${goal.title}, currently ${goal.progress}%`}
       >
-        <svg className="w-8 h-8 -rotate-90 transform" viewBox="0 0 32 32">
-          {/* Background circle */}
-          <circle
-            cx="16"
-            cy="16"
-            r={radius}
-            fill="transparent"
-            strokeWidth="3"
-            className="stroke-gray-700"
-          />
-          {/* Progress arc */}
+        <svg className="h-8 w-8 -rotate-90 transform" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r={radius} fill="transparent" strokeWidth="3" className="stroke-muted" />
           <circle
             cx="16"
             cy="16"
@@ -65,42 +70,66 @@ export function WeeklyGoalItem({ goal, onEdit, onDelete, onToggleComplete }: Wee
             stroke="currentColor"
           />
         </svg>
-        <span className="absolute text-[8px] text-gray-300 font-medium">
+        <span className="absolute text-[8px] font-medium text-foreground">
           {Math.round(clampedProgress)}%
         </span>
-      </div>
+      </button>
 
       {/* MIDDLE: Goal info */}
-      <div className="flex-1 min-w-0">
-        <h4 className={cn("text-sm font-medium text-white truncate", goal.status === 'completed' && "line-through text-gray-500")}>
+      <div className="min-w-0 flex-1">
+        <h4
+          className={cn(
+            "truncate text-sm font-medium",
+            goal.status === "completed" && "text-muted-foreground line-through",
+          )}
+        >
           {goal.title}
         </h4>
-        {goal.target_date && (
-          <span className="text-xs text-gray-600 block truncate mt-0.5">
+        {goal.target_date ? (
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
             {formatDate(goal.target_date)}
           </span>
-        )}
+        ) : null}
       </div>
 
-      {/* RIGHT: Action buttons */}
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <button
-          onClick={() => onEdit(goal)}
-          className="text-gray-600 hover:text-gray-300 p-1 cursor-pointer transition-colors"
+      {/* RIGHT: Action button */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          aria-label="Weekly goal options"
         >
-          <Pencil className="w-[14px] h-[14px]" />
-        </button>
-        <button
-          onClick={() => {
-            if (window.confirm("Are you sure you want to delete this weekly goal?")) {
-              onDelete(goal.id);
-            }
-          }}
-          className="text-gray-600 hover:text-red-400 p-1 cursor-pointer transition-colors"
-        >
-          <Trash2 className="w-[14px] h-[14px]" />
-        </button>
-      </div>
+          <MoreVertical className="h-4 w-4" aria-hidden />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit(goal)}>
+            <Pencil className="h-4 w-4" aria-hidden />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault();
+              setConfirmDelete(true);
+            }}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete weekly goal?"
+        description={`"${goal.title}" will be removed permanently.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          setConfirmDelete(false);
+          onDelete(goal.id);
+        }}
+      />
     </div>
   );
 }

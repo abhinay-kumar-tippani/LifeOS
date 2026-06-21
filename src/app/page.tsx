@@ -3,13 +3,14 @@ import { HeroSection } from "@/components/homepage/HeroSection";
 import { StatsSection } from "@/components/homepage/StatsSection";
 import { FeatureSection } from "@/components/homepage/FeatureSection";
 import { CTASection } from "@/components/homepage/CTASection";
+import { FAQSection } from "@/components/homepage/FAQSection";
 import { Footer } from "@/components/homepage/Footer";
 
 const tags = ["Habits", "Tasks", "Focus", "Journal", "Analytics", "Matrix"];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-foreground dark">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <main>
         <HeroSection />
@@ -36,6 +37,7 @@ export default function HomePage() {
           </p>
         </section>
         <FeatureSection />
+        <FAQSection />
         <CTASection />
       </main>
       <Footer />

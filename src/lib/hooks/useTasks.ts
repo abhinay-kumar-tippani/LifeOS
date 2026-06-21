@@ -78,6 +78,18 @@ export function useTasks(userId: string | undefined) {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!userId) throw new Error("No user");
+      const { error } = await supabase.from("tasks").delete().eq("id", id).eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      queryClient.invalidateQueries({ queryKey: ["analytics", userId] });
+    }
+  });
+
   const createTask = useCallback(async (payload: any) => {
     try {
       await createMutation.mutateAsync(payload);
@@ -99,6 +111,13 @@ export function useTasks(userId: string | undefined) {
     } catch (e: any) { return { error: e.message }; }
   }, [reorderMutation]);
 
+  const deleteTask = useCallback(async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      return { error: null };
+    } catch (e: any) { return { error: e.message }; }
+  }, [deleteMutation]);
+
   return {
     tasks,
     loading,
@@ -106,6 +125,7 @@ export function useTasks(userId: string | undefined) {
     fetchTasks: async () => { await fetchTasks(); },
     createTask,
     updateTask,
+    deleteTask,
     reorderKanban,
   };
 }

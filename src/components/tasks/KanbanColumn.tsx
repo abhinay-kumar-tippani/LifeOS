@@ -13,11 +13,17 @@ export function KanbanColumn({
   title,
   tasks,
   onAdd,
+  onEditTask,
+  onDeleteTask,
+  onMarkDone,
 }: {
   id: Task["status"];
   title: string;
   tasks: Task[];
   onAdd: () => void;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (task: Task) => Promise<void>;
+  onMarkDone?: (task: Task) => Promise<void>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -38,9 +44,23 @@ export function KanbanColumn({
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((t) => (
-            <KanbanCard key={t.id} task={t} />
+            <KanbanCard
+              key={t.id}
+              task={t}
+              onEdit={onEditTask}
+              onDelete={onDeleteTask}
+              onMarkDone={onMarkDone}
+            />
           ))}
         </SortableContext>
+        {tasks.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/60 px-4 py-8 text-center">
+            <p className="text-sm text-muted-foreground">No tasks here yet</p>
+            <Button variant="link" size="sm" className="mt-1" onClick={onAdd}>
+              Add a task
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

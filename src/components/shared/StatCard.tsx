@@ -6,13 +6,17 @@ export function StatCard({
   label,
   value,
   hint,
+  hintClassName,
   icon,
+  action,
   className,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
+  hintClassName?: string;
   icon?: ReactNode;
+  action?: ReactNode;
   className?: string;
 }) {
   return (
@@ -23,7 +27,14 @@ export function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold tracking-tight text-foreground">{value}</div>
-        {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
+        {(hint || action) ? (
+          <div className="mt-1 flex items-center gap-1.5">
+            {hint ? (
+              <p className={cn("text-xs text-muted-foreground", hintClassName)}>{hint}</p>
+            ) : null}
+            {action}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

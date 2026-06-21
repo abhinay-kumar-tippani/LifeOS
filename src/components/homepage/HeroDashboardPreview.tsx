@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   CheckCircle2,
   Circle,
@@ -21,11 +21,12 @@ const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
 const weekDone = [true, true, true, false, false, false, false];
 
 export function HeroDashboardPreview() {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, delay: 0.12 }}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 32 }}
+      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={{ duration: shouldReduceMotion ? 0.05 : 0.55, delay: shouldReduceMotion ? 0 : 0.12 }}
       className="mx-auto mt-14 max-w-5xl"
     >
       <p className="mb-4 text-center text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">

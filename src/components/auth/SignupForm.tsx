@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -24,6 +25,9 @@ const schema = z
     email: z.string().email("Enter a valid email"),
     password: z.string().min(8, "At least 8 characters"),
     confirm: z.string(),
+    agree: z.literal(true, {
+      errorMap: () => ({ message: "Please agree to the terms" }),
+    }),
   })
   .refine((data) => data.password === data.confirm, {
     message: "Passwords must match",
@@ -40,7 +44,7 @@ export function SignupForm() {
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { full_name: "", email: "", password: "", confirm: "" },
+    defaultValues: { full_name: "", email: "", password: "", confirm: "", agree: false as never },
   });
 
   async function onSubmit(values: Values) {
@@ -156,6 +160,30 @@ export function SignupForm() {
                 <FormControl>
                   <Input id="signup-confirm" type="password" autoComplete="new-password" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="agree"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-start gap-2 pt-1">
+                  <FormControl>
+                    <Checkbox
+                      id="signup-agree"
+                      checked={Boolean(field.value)}
+                      onCheckedChange={(c) => field.onChange(Boolean(c))}
+                      aria-label="Agree to terms and privacy policy"
+                    />
+                  </FormControl>
+                  <label htmlFor="signup-agree" className="cursor-pointer text-xs leading-relaxed text-muted-foreground">
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link> and{" "}
+                    <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                  </label>
+                </div>
                 <FormMessage />
               </FormItem>
             )}

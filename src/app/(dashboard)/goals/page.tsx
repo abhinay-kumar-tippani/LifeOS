@@ -5,11 +5,14 @@ import { Calendar, Zap } from "lucide-react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useGoals } from "@/lib/hooks/useGoals";
 import type { Goal } from "@/types";
-
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
 import { MainGoalCard } from "@/components/goals/MainGoalCard";
 import { MonthlyGoalCard } from "@/components/goals/MonthlyGoalCard";
 import { WeeklyGoalItem } from "@/components/goals/WeeklyGoalItem";
 import { GoalForm } from "@/components/goals/GoalForm";
+import { fireGoalCompleteConfetti } from "@/lib/utils/confetti";
+import { toast } from "sonner";
 
 export default function GoalsPage() {
   const { user } = useUser();
@@ -33,104 +36,103 @@ export default function GoalsPage() {
 
   const handleSave = async (data: Partial<Goal>) => {
     if (editingGoal) {
-      await updateGoal(editingGoal.id, data);
+      const wasComplete = (editingGoal.progress ?? 0) >= 100;
+      const willBeComplete = (data.progress ?? 0) >= 100;
+      const { error } = await updateGoal(editingGoal.id, data);
+      if (error) toast.error(error.message);
+      else {
+        toast.success("Updated");
+        if (!wasComplete && willBeComplete) {
+          fireGoalCompleteConfetti();
+          toast.success("Goal reached 100%! 🎉");
+        }
+      }
     } else {
-      await createGoal({ ...data, type: formType });
+      const { error } = await createGoal({ ...data, type: formType });
+      if (error) toast.error(error.message);
+      else toast.success("Goal added");
     }
     setFormOpen(false);
     setEditingGoal(null);
   };
 
   return (
-    <div className="flex-1 w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Goals</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Track your main goal, monthly targets, and weekly focus.
-        </p>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-8">
+      <PageHeader
+        title="Goals"
+        description="Track your main goal, monthly targets, and weekly focus."
+      />
 
-      <div className="flex flex-col gap-8 pb-20">
-        {/* SECTION 1: MAIN GOAL */}
-        <section>
-          <MainGoalCard
-            goal={mainGoal}
-            onAdd={() => openForm("main")}
-            onEdit={(goal) => openEditForm(goal)}
-            onDelete={(id) => deleteGoal(id)}
-          />
-        </section>
+      <section>
+        <MainGoalCard
+          goal={mainGoal}
+          onAdd={() => openForm("main")}
+          onEdit={(goal) => openEditForm(goal)}
+          onDelete={(id) => deleteGoal(id)}
+        />
+      </section>
 
-        {/* SECTION 2: MONTHLY GOALS */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-[18px] h-[18px] text-blue-400" />
-              <h2 className="text-lg font-semibold text-white">Monthly Goals</h2>
-            </div>
-            <button
-              onClick={() => openForm("monthly")}
-              className="text-sm text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer transition-colors"
-            >
-              + Add
-            </button>
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-[18px] w-[18px] text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Monthly Goals</h2>
           </div>
+          <Button variant="ghost" size="sm" onClick={() => openForm("monthly")}>
+            + Add
+          </Button>
+        </div>
 
-          {monthlyGoals.length === 0 ? (
-            <div className="border border-dashed border-white/10 rounded-xl py-8 px-4 flex flex-col items-center justify-center">
-              <p className="text-gray-600 text-sm text-center">No monthly goals yet</p>
-              <p className="text-gray-700 text-xs text-center mt-1">Break your main goal into monthly milestones</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {monthlyGoals.map((goal) => (
-                <MonthlyGoalCard
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={() => openEditForm(goal)}
-                  onDelete={(id) => deleteGoal(id)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* SECTION 3: WEEKLY GOALS */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Zap className="w-[18px] h-[18px] text-amber-400" />
-              <h2 className="text-lg font-semibold text-white">This Week</h2>
-            </div>
-            <button
-              onClick={() => openForm("weekly")}
-              className="text-sm text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer transition-colors"
-            >
-              + Add
-            </button>
+        {monthlyGoals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 px-4 py-8">
+            <p className="text-center text-sm text-muted-foreground">No monthly goals yet</p>
+            <p className="mt-1 text-center text-xs text-muted-foreground">
+              Break your main goal into monthly milestones
+            </p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {monthlyGoals.map((goal) => (
+              <MonthlyGoalCard
+                key={goal.id}
+                goal={goal}
+                onEdit={() => openEditForm(goal)}
+                onDelete={(id) => deleteGoal(id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-          {weeklyGoals.length === 0 ? (
-            <div className="py-6 text-center">
-              <p className="text-gray-600 text-sm">No weekly goals — what's your focus this week?</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {weeklyGoals.map((goal) => (
-                <WeeklyGoalItem
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={() => openEditForm(goal)}
-                  onDelete={(id) => deleteGoal(id)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="h-[18px] w-[18px] text-amber-400" />
+            <h2 className="text-lg font-semibold text-foreground">This Week</h2>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => openForm("weekly")}>
+            + Add
+          </Button>
+        </div>
 
-      {/* FORM MODAL */}
+        {weeklyGoals.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border/60 py-6 text-center">
+            <p className="text-sm text-muted-foreground">No weekly goals — what&apos;s your focus this week?</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {weeklyGoals.map((goal) => (
+              <WeeklyGoalItem
+                key={goal.id}
+                goal={goal}
+                onEdit={() => openEditForm(goal)}
+                onDelete={(id) => deleteGoal(id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
       {formOpen && (
         <GoalForm
           type={formType}

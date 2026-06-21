@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { LayoutDashboard, Flame, Timer } from "lucide-react";
 
 const features = [
@@ -22,6 +22,8 @@ const features = [
 ];
 
 export function FeatureSection() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <section id="features" className="py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -38,10 +40,10 @@ export function FeatureSection() {
             return (
               <motion.div
                 key={f.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+                whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
+                transition={{ delay: shouldReduceMotion ? 0 : i * 0.08, duration: shouldReduceMotion ? 0.05 : 0.4 }}
                 className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/30 p-6 shadow-lg backdrop-blur-md"
               >
                 <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition duration-300 group-hover:opacity-100 [background:linear-gradient(135deg,rgba(99,102,241,0.35),transparent_40%,rgba(139,92,246,0.25))]" />

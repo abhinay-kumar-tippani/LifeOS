@@ -1,11 +1,21 @@
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePomodoroStore } from '@/lib/stores/pomodoroStore'
+import { getDefaultWorkSeconds } from '@/lib/utils/pomodoroPrefs'
 
 export function PomodoroEngine() {
   const isRunning = usePomodoroStore(s => s.isRunning)
   
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const workSeconds = getDefaultWorkSeconds()
+    usePomodoroStore.setState((state) =>
+      state.sessionType === 'work' && !state.isRunning
+        ? { timeLeft: workSeconds, totalSeconds: workSeconds }
+        : state,
+    )
+  }, [])
 
   useEffect(() => {
     if (isRunning) {
@@ -21,7 +31,7 @@ export function PomodoroEngine() {
               ? (newCount % 4 === 0 ? 'longBreak' : 'break')
               : 'work'
             const nextDuration = nextType === 'work'
-              ? 25 * 60
+              ? getDefaultWorkSeconds()
               : nextType === 'break'
               ? 5 * 60
               : 15 * 60

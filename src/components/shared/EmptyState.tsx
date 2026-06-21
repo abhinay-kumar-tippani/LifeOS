@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -11,7 +12,7 @@ export function EmptyState({
 }: {
   title: string;
   description?: string;
-  action?: { label: string; onClick: () => void };
+  action?: { label: string; onClick?: () => void; href?: string };
   className?: string;
 }) {
   return (
@@ -27,9 +28,15 @@ export function EmptyState({
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       ) : null}
       {action ? (
-        <Button className="mt-6" onClick={action.onClick} aria-label={action.label}>
-          {action.label}
-        </Button>
+        action.href ? (
+          <Button className="mt-6" asChild aria-label={action.label}>
+            <Link href={action.href}>{action.label}</Link>
+          </Button>
+        ) : (
+          <Button className="mt-6" onClick={action.onClick} aria-label={action.label}>
+            {action.label}
+          </Button>
+        )
       ) : null}
     </div>
   );

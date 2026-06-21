@@ -4,7 +4,6 @@ import { format, parseISO } from "date-fns";
 import type { Habit, HabitCompletion } from "@/types";
 import { cn } from "@/lib/utils/cn";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { getHabitColor } from "@/lib/utils/habitColors";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export function HabitGrid({
@@ -115,12 +114,12 @@ export function HabitGrid({
           </thead>
           <tbody>
             {habits.map((h) => {
-              const hColor = getHabitColor(h.name);
+              const color = h.color || "#6366f1";
               return (
               <tr key={h.id} className="border-b border-border/40">
-                <td className="sticky left-0 z-10 bg-background px-3 py-2 font-medium border-r border-border/40">
+                <td className="sticky left-0 z-10 border-r border-border/40 bg-background px-3 py-2 font-medium">
                   <div className="flex items-center gap-2">
-                    <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", hColor.bg)} />
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
                     <span className="truncate">{h.name}</span>
                   </div>
                 </td>
@@ -162,13 +161,17 @@ export function HabitGrid({
                           aria-label={`Toggle ${h.name} on ${d}`}
                           disabled={!canInteract}
                           className={cn(
-                            "h-[28px] w-[28px] rounded-md border flex items-center justify-center transition-colors",
-                            canInteract ? "cursor-pointer hover:border-indigo-400" : "cursor-not-allowed",
+                            "flex h-5 w-5 items-center justify-center rounded-md border transition-colors",
+                            canInteract ? "cursor-pointer hover:border-primary/60" : "cursor-not-allowed",
                             isDone && !isFutureDay
-                              ? `border-transparent text-white ${hColor.bg}`
-                              : "bg-transparent"
+                              ? "border-transparent text-white"
+                              : "bg-transparent",
                           )}
-                          style={isDone && !isFutureDay ? {} : { borderColor: `${hColor.hex}40` }}
+                          style={
+                            isDone && !isFutureDay
+                              ? { backgroundColor: color, borderColor: color }
+                              : { borderColor: `${color}66` }
+                          }
                         />
                       </div>
                     </td>
@@ -184,15 +187,15 @@ export function HabitGrid({
       <div className="flex items-center gap-6 mt-3 px-2">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-indigo-500/20 border border-indigo-500/50" />
-          <span className="text-xs text-gray-500">Today (editable)</span>
+          <span className="text-xs text-muted-foreground">Today (editable)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-800 border border-gray-700 opacity-60" />
-          <span className="text-xs text-gray-500">Past (locked)</span>
+          <div className="h-4 w-4 rounded border border-border bg-muted opacity-60" />
+          <span className="text-xs text-muted-foreground">Past (locked)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-800 border border-gray-700 opacity-25" />
-          <span className="text-xs text-gray-500">Future (locked)</span>
+          <div className="h-4 w-4 rounded border border-border bg-muted opacity-25" />
+          <span className="text-xs text-muted-foreground">Future (locked)</span>
         </div>
       </div>
     </div>

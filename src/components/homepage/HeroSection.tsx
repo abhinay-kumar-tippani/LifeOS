@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { HeroDashboardPreview } from "./HeroDashboardPreview";
+import { Sparkles } from "lucide-react";
 
 export function HeroSection() {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.35),transparent)]" />
@@ -13,12 +16,16 @@ export function HeroSection() {
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          transition={{ duration: shouldReduceMotion ? 0.05 : 0.45 }}
           className="mx-auto max-w-3xl text-center"
         >
-          <p className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-primary/90">
+          <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <Sparkles className="h-3 w-3" aria-hidden />
+            Free forever · No credit card · Your data, your control
+          </div>
+          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary/90">
             Habits · Tasks · Focus · Journal
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl sm:leading-[1.1] lg:text-6xl">

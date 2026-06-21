@@ -16,7 +16,7 @@ export function GoalProgressBar({
   let fillColor = color;
   if (!fillColor) {
     if (clampedProgress <= 30) {
-      fillColor = "bg-red-500";
+      fillColor = "bg-destructive";
     } else if (clampedProgress <= 60) {
       fillColor = "bg-amber-500";
     } else if (clampedProgress <= 89) {
@@ -33,17 +33,23 @@ export function GoalProgressBar({
   }[size];
 
   return (
-    <div className="flex items-center gap-3 w-full">
-      <div className={cn("relative w-full bg-gray-700 rounded-full overflow-hidden", heightClass)}>
+    <div className="flex w-full items-center gap-3">
+      <div
+        className={cn("relative w-full overflow-hidden rounded-full bg-muted", heightClass)}
+        role="progressbar"
+        aria-valuenow={Math.round(clampedProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div
           className={cn(
             "absolute top-0 left-0 h-full rounded-full transition-all duration-500",
-            fillColor
+            fillColor,
           )}
           style={{ width: `${clampedProgress}%` }}
         />
       </div>
-      <span className="text-xs text-gray-400 font-medium shrink-0">
+      <span className="shrink-0 text-xs font-medium text-muted-foreground">
         {Math.round(clampedProgress)}%
       </span>
     </div>

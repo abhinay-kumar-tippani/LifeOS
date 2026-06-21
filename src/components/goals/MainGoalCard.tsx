@@ -4,6 +4,16 @@ import { Target, Star, Pencil, Trash2, Calendar, AlertTriangle } from "lucide-re
 import type { Goal } from "@/types";
 import { GoalProgressBar } from "./GoalProgressBar";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { MoreVertical } from "lucide-react";
+import { useState } from "react";
 
 interface MainGoalCardProps {
   goal: Goal | undefined;
@@ -13,20 +23,19 @@ interface MainGoalCardProps {
 }
 
 export function MainGoalCard({ goal, onEdit, onDelete, onAdd }: MainGoalCardProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   if (!goal) {
     return (
-      <div className="border-2 border-dashed border-indigo-500/30 rounded-2xl flex flex-col items-center justify-center p-8 min-h-[280px]">
-        <Target className="w-12 h-12 text-indigo-400 mb-3" />
-        <h3 className="text-xl font-semibold text-white mt-3">Set your main goal</h3>
-        <p className="text-gray-500 text-sm max-w-xs text-center mt-1">
-          Your main goal is your north star — the one big thing you're working toward.
+      <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/30 bg-card/30 p-8">
+        <Target className="mb-3 h-12 w-12 text-primary" aria-hidden />
+        <h3 className="mt-3 text-xl font-semibold">Set your main goal</h3>
+        <p className="mt-1 max-w-xs text-center text-sm text-muted-foreground">
+          Your main goal is your north star — the one big thing you&apos;re working toward.
         </p>
-        <button
-          onClick={onAdd}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium mt-6 cursor-pointer transition-colors"
-        >
+        <Button onClick={onAdd} className="mt-6" aria-label="Set main goal">
           + Set Main Goal
-        </button>
+        </Button>
       </div>
     );
   }
@@ -37,78 +46,90 @@ export function MainGoalCard({ goal, onEdit, onDelete, onAdd }: MainGoalCardProp
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
     }).format(new Date(dateStr));
   };
 
   return (
-    <div className="relative bg-gradient-to-br from-indigo-950/80 via-[#111118] to-violet-950/40 border border-indigo-500/20 rounded-2xl p-8 overflow-hidden shadow-[0_0_60px_rgba(99,102,241,0.08)]">
+    <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/10 p-8 shadow-lg">
       {/* TOP ROW */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-indigo-400 fill-indigo-400" />
-          <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
+          <Star className="h-4 w-4 fill-primary text-primary" aria-hidden />
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">
             Main Goal
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onEdit(goal)}
-            className="text-gray-500 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            aria-label="Goal options"
           >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to delete your main goal?")) {
-                onDelete(goal.id);
-              }
-            }}
-            className="text-gray-600 hover:text-red-400 p-2 rounded-lg hover:bg-red-400/10 transition-colors cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+            <MoreVertical className="h-4 w-4" aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(goal)}>
+              <Pencil className="h-4 w-4" aria-hidden />
+              Edit / update progress
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={(e) => {
+                e.preventDefault();
+                setConfirmDelete(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* TITLE & DESC */}
-      <h2 className="text-3xl font-bold text-white mt-4 line-clamp-2">
-        {goal.title}
-      </h2>
-      {goal.description && (
-        <p className="text-gray-400 text-base mt-3 leading-relaxed max-w-2xl">
+      <h2 className="mt-4 line-clamp-2 text-3xl font-bold">{goal.title}</h2>
+      {goal.description ? (
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
           {goal.description}
         </p>
-      )}
+      ) : null}
 
       {/* PROGRESS */}
       <div className="mt-8">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-gray-400 font-medium">Progress</span>
-          <span className="text-sm text-white font-semibold">{goal.progress}%</span>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-muted-foreground">Progress</span>
+          <span className="text-sm font-semibold">{goal.progress}%</span>
         </div>
         <GoalProgressBar progress={goal.progress} size="lg" />
       </div>
 
       {/* FOOTER: DATE & UPDATE BUTTON */}
-      <div className="flex items-center justify-between mt-8">
+      <div className="mt-8 flex items-center justify-between">
         <div className="flex items-center">
           {goal.target_date ? (
-            <div className={cn("flex items-center gap-2 text-sm", isPastDue ? "text-red-400" : "text-gray-500")}>
-              {isPastDue ? <AlertTriangle className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+            <div className={cn("flex items-center gap-2 text-sm", isPastDue ? "text-destructive" : "text-muted-foreground")}>
+              {isPastDue ? <AlertTriangle className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
               <span>Target: {formatDate(goal.target_date)}</span>
             </div>
-          ) : (
-            <div />
-          )}
+          ) : null}
         </div>
-        <button
-          onClick={() => onEdit(goal)}
-          className="text-sm font-medium text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors cursor-pointer"
-        >
+        <Button variant="secondary" onClick={() => onEdit(goal)} aria-label="Update progress">
           Update Progress
-        </button>
+        </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete main goal?"
+        description="Your main goal will be removed. You can set a new one anytime."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => {
+          setConfirmDelete(false);
+          onDelete(goal.id);
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { getDefaultWorkSeconds } from '@/lib/utils/pomodoroPrefs'
 
 export interface PomodoroStore {
   timeLeft: number         // seconds remaining
@@ -17,7 +18,7 @@ export interface PomodoroStore {
   reset: () => void
 }
 
-const DEFAULT_WORK = 25 * 60  // 25 minutes in seconds
+const DEFAULT_WORK = getDefaultWorkSeconds()
 
 export const usePomodoroStore = create<PomodoroStore>((set) => ({
   timeLeft: DEFAULT_WORK,
@@ -33,11 +34,14 @@ export const usePomodoroStore = create<PomodoroStore>((set) => ({
   setSessionCount: (n) => set({ sessionCount: n }),
   setTotalSeconds: (n) => set({ totalSeconds: n }),
   setTaskId: (id) => set({ taskId: id }),
-  reset: () => set({
-    timeLeft: DEFAULT_WORK,
-    isRunning: false,
-    sessionType: 'work',
-    sessionCount: 0,
-    totalSeconds: DEFAULT_WORK,
-  }),
+  reset: () => {
+    const workSeconds = getDefaultWorkSeconds()
+    set({
+      timeLeft: workSeconds,
+      isRunning: false,
+      sessionType: 'work',
+      sessionCount: 0,
+      totalSeconds: workSeconds,
+    })
+  },
 }))
