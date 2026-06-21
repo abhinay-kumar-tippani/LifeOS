@@ -4,6 +4,12 @@ import { useLocation } from "wouter";
 import { useUser } from "@/lib/hooks/useUser";
 import { useHabits } from "@/lib/hooks/useHabits";
 
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/forgot-password", "/callback", "/onboarding", "/privacy", "/terms"];
+
+function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.some((p) => pathname === p || (p !== "/" && pathname.startsWith(p)));
+}
+
 export function useOnboardingGate() {
   const [pathname, navigate] = useLocation();
   const { user, loading: userLoading } = useUser();
@@ -12,7 +18,12 @@ export function useOnboardingGate() {
 
   useEffect(() => {
     if (userLoading || habitsLoading || checked) return;
-    if (pathname === "/onboarding" || pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/privacy") || pathname.startsWith("/terms")) {
+    if (isPublicPath(pathname)) {
+      setChecked(true);
+      return;
+    }
+    if (!user) {
+      navigate(`/login?next=${encodeURIComponent(pathname)}`, { replace: true });
       setChecked(true);
       return;
     }
@@ -20,9 +31,9 @@ export function useOnboardingGate() {
     try {
       complete = localStorage.getItem("lifeos-onboarding-complete") === "1";
     } catch { /* ignore */ }
-    if (!complete && habits.length === 0 && pathname !== "/onboarding") {
+    if (!complete && habits.length === 0) {
       navigate("/onboarding");
     }
     setChecked(true);
-  }, [userLoading, habitsLoading, habits.length, pathname, navigate, checked]);
+  }, [userLoading, habitsLoading, habits.length, pathname, navigate, checked, user]);
 }

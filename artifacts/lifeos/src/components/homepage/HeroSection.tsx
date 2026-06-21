@@ -36,13 +36,10 @@ export function HeroSection() {
           </p>
           <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Button size="lg" className="min-h-12 min-w-[160px] shadow-lg shadow-primary/25" asChild>
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/signup">Get Started</Link>
             </Button>
             <Button size="lg" variant="outline" className="min-h-12 border-white/15 bg-white/[0.04]" asChild>
               <a href="#features">Explore features</a>
-            </Button>
-            <Button size="lg" variant="ghost" className="min-h-12 text-muted-foreground hover:text-foreground" asChild>
-              <Link href="/dashboard">Open dashboard</Link>
             </Button>
           </div>
         </motion.div>

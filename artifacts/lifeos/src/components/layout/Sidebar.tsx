@@ -85,6 +85,8 @@ export function Sidebar({
   const { isRunning, timeLeft } = usePomodoroStore();
 
   const [collapsed, setCollapsed] = useState(false);
+  const displayName = profile?.full_name ?? user?.email?.split("@")[0] ?? null;
+  const displayEmail = profile?.email ?? user?.email ?? null;
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -249,8 +251,8 @@ export function Sidebar({
             <div className="flex flex-col items-center gap-3">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
-                <AvatarFallback>
-                  {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1).toUpperCase()}
+                <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
+                  {(displayName ?? displayEmail ?? "?").slice(0, 1).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Tooltip>
@@ -266,16 +268,24 @@ export function Sidebar({
             </div>
           ) : (
             <>
-              <div className="mb-2 flex items-center gap-3 rounded-lg px-2 py-1">
+              <div className="mb-2 flex items-center gap-3 rounded-lg px-2 py-1.5 bg-white/[0.03] border border-border/30">
                 <Avatar className="h-9 w-9 shrink-0">
                   <AvatarImage src={profile?.avatar_url ?? undefined} alt="" />
-                  <AvatarFallback>
-                    {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1).toUpperCase()}
+                  <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
+                    {(displayName ?? displayEmail ?? "?").slice(0, 1).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1 overflow-hidden">
-                  <p className="truncate text-sm font-medium">{profile?.full_name ?? "You"}</p>
-                  <p className="truncate text-xs text-muted-foreground">{profile?.email}</p>
+                  {displayName ? (
+                    <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                  ) : (
+                    <div className="h-3.5 w-24 animate-pulse rounded bg-muted" />
+                  )}
+                  {displayEmail ? (
+                    <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+                  ) : (
+                    <div className="mt-1 h-3 w-32 animate-pulse rounded bg-muted" />
+                  )}
                 </div>
               </div>
               <Button

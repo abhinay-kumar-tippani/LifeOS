@@ -1,74 +1,119 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { AuthGuard, PublicOnlyGuard } from "@/components/auth/AuthGuard";
+import DashboardLayout from "@/app/(dashboard)/layout";
+import OnboardingShell from "@/components/layout/OnboardingShell";
 
 import HomePage from "@/app/page";
 import LoginPage from "@/app/(auth)/login/page";
 import SignupPage from "@/app/(auth)/signup/page";
 import ForgotPasswordPage from "@/app/(auth)/forgot-password/page";
 import CallbackPage from "@/pages/auth/CallbackPage";
-import DashboardLayout from "@/app/(dashboard)/layout";
-import DashboardPage from "@/app/(dashboard)/dashboard/page";
-import HabitsPage from "@/app/(dashboard)/habits/page";
-import TasksPage from "@/app/(dashboard)/tasks/page";
-import MatrixPage from "@/app/(dashboard)/matrix/page";
-import GoalsPage from "@/app/(dashboard)/goals/page";
-import JournalPage from "@/app/(dashboard)/journal/page";
-import PomodoroPage from "@/app/(dashboard)/pomodoro/page";
-import AnalyticsPage from "@/app/(dashboard)/analytics/page";
-import SettingsPage from "@/app/(dashboard)/settings/page";
-import OnboardingPage from "@/app/(dashboard)/onboarding/page";
 import PrivacyPage from "@/app/privacy/page";
 import TermsPage from "@/app/terms/page";
 import NotFoundPage from "@/app/(dashboard)/not-found";
 
-function DashboardRoute({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+const DashboardPage = lazy(() => import("@/app/(dashboard)/dashboard/page"));
+const HabitsPage = lazy(() => import("@/app/(dashboard)/habits/page"));
+const TasksPage = lazy(() => import("@/app/(dashboard)/tasks/page"));
+const MatrixPage = lazy(() => import("@/app/(dashboard)/matrix/page"));
+const GoalsPage = lazy(() => import("@/app/(dashboard)/goals/page"));
+const JournalPage = lazy(() => import("@/app/(dashboard)/journal/page"));
+const PomodoroPage = lazy(() => import("@/app/(dashboard)/pomodoro/page"));
+const AnalyticsPage = lazy(() => import("@/app/(dashboard)/analytics/page"));
+const SettingsPage = lazy(() => import("@/app/(dashboard)/settings/page"));
+const OnboardingPage = lazy(() => import("@/app/(dashboard)/onboarding/page"));
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthGuard>
+      <DashboardLayout>{children}</DashboardLayout>
+    </AuthGuard>
+  );
 }
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/signup" component={SignupPage} />
+      <Route path="/login">
+        <PublicOnlyGuard><LoginPage /></PublicOnlyGuard>
+      </Route>
+      <Route path="/signup">
+        <PublicOnlyGuard><SignupPage /></PublicOnlyGuard>
+      </Route>
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/callback" component={CallbackPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/onboarding">
-        <DashboardRoute><OnboardingPage /></DashboardRoute>
+        <AuthGuard>
+          <OnboardingShell>
+            <Suspense fallback={<PageLoader />}><OnboardingPage /></Suspense>
+          </OnboardingShell>
+        </AuthGuard>
       </Route>
       <Route path="/dashboard">
-        <DashboardRoute><DashboardPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/habits">
-        <DashboardRoute><HabitsPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><HabitsPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/tasks">
-        <DashboardRoute><TasksPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><TasksPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/matrix">
-        <DashboardRoute><MatrixPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><MatrixPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/goals">
-        <DashboardRoute><GoalsPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><GoalsPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/journal">
-        <DashboardRoute><JournalPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><JournalPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/journal/:id">
-        <DashboardRoute><JournalPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><JournalPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/pomodoro">
-        <DashboardRoute><PomodoroPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><PomodoroPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/analytics">
-        <DashboardRoute><AnalyticsPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/settings">
-        <DashboardRoute><SettingsPage /></DashboardRoute>
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>
+        </ProtectedRoute>
       </Route>
       <Route component={NotFoundPage} />
     </Switch>
@@ -77,14 +122,16 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ReactQueryProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster richColors position="top-center" />
-      </ReactQueryProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ReactQueryProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster richColors position="top-center" />
+        </ReactQueryProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
