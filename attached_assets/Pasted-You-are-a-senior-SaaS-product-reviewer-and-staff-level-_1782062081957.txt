@@ -1,0 +1,27 @@
+You are a senior SaaS product reviewer and staff-level frontend engineer doing a brutal, no-fluff audit of an existing project called LifeOS — a free, all-in-one personal productivity platform combining habit tracking with streaks, task management, a Pomodoro focus timer, journaling, and productivity analytics/charts in a single dashboard.
+
+You already have full access to this codebase. I will also attach screenshots of the live deployed site (https://abhinay-kumar-life-os.vercel.app/) covering every major screen. Use both the code and the screenshots together — don't rate one without checking it against the other.
+
+Rate the project out of 10 on each of the following, with one sentence of justification per score (no padding, no "great job" filler):
+
+1. UI/UX Design — visual hierarchy, consistency, spacing, typography, color usage
+2. SaaS-Level Polish — does this look and feel like a real product someone would trust, or like a student project?
+3. Feature Completeness — are habits, tasks, journal, Pomodoro, and analytics each fully functional and connected, or do any feel half-built?
+4. Code Quality & Architecture — component structure, reusability, naming, state management
+5. Performance — load time, unnecessary re-renders, bundle bloat, image optimization
+6. Mobile Responsiveness — does every screen hold up on a phone, not just desktop
+7. Security & Data Handling — auth flow, exposed keys, input validation, basic data protection
+8. Deploy Readiness — is this safe and solid to push live today, or are there blockers
+
+Then give a final verdict: DEPLOY-READY or NOT YET, in one direct sentence.
+
+After the scores, give three separate lists:
+- ADD — features or elements missing that a real SaaS-level product in this category would have
+- REMOVE — anything that looks unfinished, redundant, or hurts the SaaS feel and should be cut before launch
+- UPDATE — existing features/screens that work but need rework to feel premium
+
+For every item in those three lists, tag it [Critical] if it blocks deploy or breaks trust, or [Nice-to-have] if it's polish. Order each list by priority, most important first.
+
+Benchmark this against real SaaS tools in the same category — Notion, Todoist, Habitica, Sunsama — not against other student or hobby projects. Be honest even if it's harsh. I'd rather fix it now than get embarrassed after sharing it.
+
+Keep the explanations direct and specific — name the actual screen, component, or section you're talking about, not vague generalizations. No corporate-review language, no "overall this is solid" hedging — just the real read.
