@@ -67,7 +67,7 @@ export function CommandPalette() {
       setOpen(false);
       navigate(path);
     },
-    [router],
+    [navigate],
   );
 
   const navItems: Action[] = useMemo(

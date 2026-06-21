@@ -1,0 +1,1 @@
+- [LifeOS Vite migration patterns](lifeos-vite-migration.md) — key decisions from migrating a Next.js app to Replit Vite stack
