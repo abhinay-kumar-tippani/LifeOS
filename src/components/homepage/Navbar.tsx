@@ -62,10 +62,10 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" asChild>
-            <Link href="/login">Sign in</Link>
+            <Link href="/dashboard">Sign in</Link>
           </Button>
           <Button asChild>
-            <Link href="/signup">Get started</Link>
+            <Link href="/dashboard">Get started</Link>
           </Button>
         </div>
 
@@ -98,11 +98,11 @@ export function Navbar() {
                   {l.label}
                 </a>
               ))}
-              <Link href="/login" className="py-2 text-sm font-medium" onClick={() => setOpen(false)}>
+              <Link href="/dashboard" className="py-2 text-sm font-medium" onClick={() => setOpen(false)}>
                 Sign in
               </Link>
               <Button asChild className="w-full">
-                <Link href="/signup" onClick={() => setOpen(false)}>
+                <Link href="/dashboard" onClick={() => setOpen(false)}>
                   Get started
                 </Link>
               </Button>

@@ -22,12 +22,12 @@ export function Footer() {
           <a href="https://github.com/abhinay-kumar-tippani/LifeOS" className="hover:text-foreground">
             GitHub
           </a>
-          <Link href="/login" className="hover:text-foreground">
+          <a href="#about" className="hover:text-foreground">
             Privacy
-          </Link>
-          <Link href="/login" className="hover:text-foreground">
+          </a>
+          <a href="#about" className="hover:text-foreground">
             Terms
-          </Link>
+          </a>
           <a href="mailto:hello@lifeos.app" className="hover:text-foreground">
             Contact
           </a>

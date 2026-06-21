@@ -22,10 +22,10 @@ export function CTASection() {
           </p>
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Button size="lg" className="shadow-lg shadow-primary/25" asChild>
-              <Link href="/signup">Get started</Link>
+              <Link href="/dashboard">Get started</Link>
             </Button>
             <Button size="lg" variant="outline" className="border-white/15 bg-transparent" asChild>
-              <Link href="/login">I already have an account</Link>
+              <Link href="/dashboard">I already have an account</Link>
             </Button>
           </div>
         </motion.div>
