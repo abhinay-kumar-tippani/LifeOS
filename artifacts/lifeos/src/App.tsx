@@ -23,6 +23,8 @@ const TasksPage = lazy(() => import("@/app/(dashboard)/tasks/page"));
 const MatrixPage = lazy(() => import("@/app/(dashboard)/matrix/page"));
 const GoalsPage = lazy(() => import("@/app/(dashboard)/goals/page"));
 const JournalPage = lazy(() => import("@/app/(dashboard)/journal/page"));
+const JournalNewPage = lazy(() => import("@/app/(dashboard)/journal/new/page"));
+const JournalDetailPage = lazy(() => import("@/app/(dashboard)/journal/[id]/page"));
 const PomodoroPage = lazy(() => import("@/app/(dashboard)/pomodoro/page"));
 const AnalyticsPage = lazy(() => import("@/app/(dashboard)/analytics/page"));
 const SettingsPage = lazy(() => import("@/app/(dashboard)/settings/page"));
@@ -95,9 +97,14 @@ function Router() {
           <Suspense fallback={<PageLoader />}><JournalPage /></Suspense>
         </ProtectedRoute>
       </Route>
+      <Route path="/journal/new">
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><JournalNewPage /></Suspense>
+        </ProtectedRoute>
+      </Route>
       <Route path="/journal/:id">
         <ProtectedRoute>
-          <Suspense fallback={<PageLoader />}><JournalPage /></Suspense>
+          <Suspense fallback={<PageLoader />}><JournalDetailPage /></Suspense>
         </ProtectedRoute>
       </Route>
       <Route path="/pomodoro">

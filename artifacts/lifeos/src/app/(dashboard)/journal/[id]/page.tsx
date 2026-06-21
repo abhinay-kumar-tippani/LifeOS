@@ -1,5 +1,6 @@
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "wouter";
 import { useUser } from "@/lib/hooks/useUser";
 import { useJournal } from "@/lib/hooks/useJournal";
 import { JournalEditor } from "@/components/journal/JournalEditor";
@@ -8,8 +9,8 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
 import type { JournalEntry } from "@/types";
 
-export default function JournalDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function JournalDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const { user } = useUser();
   const { getEntry, saveEntry } = useJournal(user?.id);
   const [entry, setEntry] = useState<JournalEntry | null>(null);
@@ -17,6 +18,7 @@ export default function JournalDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
     let cancelled = false;
     (async () => {
       setLoading(true);

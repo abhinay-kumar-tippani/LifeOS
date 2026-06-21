@@ -23,7 +23,7 @@ import { FocusTimeChart } from "@/components/analytics/FocusTimeChart";
 
 export default function AnalyticsPage() {
   const { user } = useUser();
-  const [, navigate] = useLocation();
+  const [pathname, navigate] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
 
   const range = searchParams.get("range") || "30";

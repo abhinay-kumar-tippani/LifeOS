@@ -26,7 +26,7 @@ type Values = z.infer<typeof schema>;
 export function LoginForm() {
   const [, navigate] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
-  const redirect = searchParams.get("redirect") ?? "/dashboard";
+  const redirect = searchParams.get("next") ?? searchParams.get("redirect") ?? "/dashboard";
   const [formError, setFormError] = useState<string | null>(null);
   const supabase = getSupabaseClient();
 
