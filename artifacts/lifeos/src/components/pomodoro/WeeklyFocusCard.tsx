@@ -1,3 +1,5 @@
+"use client";
+
 
 import { useMemo } from "react";
 import { format, subDays, startOfDay, parseISO } from "date-fns";

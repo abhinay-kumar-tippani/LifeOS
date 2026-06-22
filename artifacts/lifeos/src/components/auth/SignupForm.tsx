@@ -1,7 +1,8 @@
 
+"use client";
+
 import { useState } from "react";
-import { Link } from "wouter";
-import { useLocation } from "wouter";
+import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +37,6 @@ const schema = z
 type Values = z.infer<typeof schema>;
 
 export function SignupForm() {
-  const router = useLocation();
   const [formError, setFormError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const supabase = getSupabaseClient();
@@ -53,7 +53,7 @@ export function SignupForm() {
       password: values.password,
       options: {
         data: { full_name: values.full_name },
-        emailRedirectTo: `${import.meta.env.VITE_APP_URL ?? window.location.origin}/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/callback`,
       },
     });
     if (error) {

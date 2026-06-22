@@ -1,6 +1,8 @@
+"use client";
+
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import Link from "next/link";
 import { useUser } from "@/lib/hooks/useUser";
 import { useHabits } from "@/lib/hooks/useHabits";
 import { useTasks } from "@/lib/hooks/useTasks";

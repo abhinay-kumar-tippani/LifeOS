@@ -1,5 +1,7 @@
+"use client";
 
-import { Link } from "wouter";
+
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useJournal } from "@/lib/hooks/useJournal";

@@ -1,4 +1,6 @@
-import { Link } from "wouter";
+"use client";
+
+import Link from "next/link";
 import { SignupFormDynamic } from "@/components/auth/AuthFormsDynamic";
 
 export default function SignupPage() {

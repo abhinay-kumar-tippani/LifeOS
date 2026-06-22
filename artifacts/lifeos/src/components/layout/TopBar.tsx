@@ -1,5 +1,6 @@
+"use client";
 
-import { useLocation } from "wouter";
+import { usePathname, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { useUser } from "@/lib/hooks/useUser";
 import { MobileNav } from "./MobileNav";
@@ -34,14 +35,15 @@ function titleFromPath(path: string) {
 }
 
 export function TopBar() {
-  const [pathname, navigate] = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const { profile } = useUser();
   const supabase = getSupabaseClient();
   const title = titleFromPath(pathname);
 
   async function logout() {
     await supabase.auth.signOut();
-    navigate("/login");
+    router.push("/login");
   }
 
   return (
@@ -69,7 +71,7 @@ export function TopBar() {
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate("/settings")}>Profile & settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>Profile & settings</DropdownMenuItem>
             <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

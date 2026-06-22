@@ -1,3 +1,5 @@
+"use client";
+
 
 import type { Habit, HabitCompletion } from "@/types";
 import { Button } from "@/components/ui/button";

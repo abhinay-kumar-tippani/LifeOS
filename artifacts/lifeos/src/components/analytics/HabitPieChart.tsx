@@ -1,3 +1,5 @@
+"use client";
+
 
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";

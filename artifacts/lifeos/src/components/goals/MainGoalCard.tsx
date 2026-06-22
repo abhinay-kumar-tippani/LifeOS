@@ -1,3 +1,5 @@
+"use client";
+
 
 import { Target, Star, Pencil, Trash2, Calendar, AlertTriangle } from "lucide-react";
 import type { Goal } from "@/types";

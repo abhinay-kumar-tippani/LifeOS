@@ -1,4 +1,6 @@
+"use client";
 
+import { Suspense } from "react";
 import { useUser } from "@/lib/hooks/useUser";
 import { useAnalytics } from "@/lib/hooks/useAnalytics";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -10,7 +12,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { InsightsTable } from "@/components/analytics/InsightsTable";
 import { formatRangeTrend, monthOverMonthHintClass } from "@/lib/utils/analyticsHelpers";
 import { CheckSquare, Flame, Timer, ListChecks, Download } from "lucide-react";
-import { useLocation } from "wouter";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { format, subDays } from "date-fns";
 import { toast } from "sonner";
@@ -21,10 +23,11 @@ import { WeeklyBarChart } from "@/components/analytics/WeeklyBarChart";
 import { StreakChart } from "@/components/analytics/StreakChart";
 import { FocusTimeChart } from "@/components/analytics/FocusTimeChart";
 
-export default function AnalyticsPage() {
+function AnalyticsContent() {
   const { user } = useUser();
-  const [pathname, navigate] = useLocation();
-  const searchParams = new URLSearchParams(window.location.search);
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const range = searchParams.get("range") || "30";
   const rangeDays = range === "7" ? 7 : range === "90" ? 90 : 30;
@@ -80,10 +83,8 @@ export default function AnalyticsPage() {
       const focus = data.pomodoro14.filter((p) => p.session_date === iso && p.completed).reduce((sum, p) => sum + p.duration_minutes, 0);
       csvRows.push([iso, String(comps), String(focus)]);
     }
-
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + csvRows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(",")).join("\n");
-    
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -114,7 +115,7 @@ export default function AnalyticsPage() {
                   onClick={() => {
                     const params = new URLSearchParams(searchParams.toString());
                     params.set("range", opt.value);
-                    navigate(`${pathname}?${params.toString()}`);
+                    router.push(`${pathname}?${params.toString()}`);
                   }}
                   className="h-8 px-3 text-xs"
                 >
@@ -196,9 +197,7 @@ export default function AnalyticsPage() {
       </div>
 
       <FocusTimeChart sessions={data.pomodoro14} loading={loading} />
-
       <WeeklyHeatmap cells={data.heatmap12w} loading={loading} />
-
       <InsightsTable
         habits={data.habits}
         completions={data.completionsLast30}
@@ -206,5 +205,13 @@ export default function AnalyticsPage() {
         windowDays={windowDays}
       />
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-24"><LoadingSpinner /></div>}>
+      <AnalyticsContent />
+    </Suspense>
   );
 }

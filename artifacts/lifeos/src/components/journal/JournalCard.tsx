@@ -1,6 +1,8 @@
+"use client";
+
 
 import { useState } from "react";
-import { Link } from "wouter";
+import Link from "next/link";
 import type { JournalEntry } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { format, parseISO, isToday, isYesterday, differenceInCalendarDays } from "date-fns";

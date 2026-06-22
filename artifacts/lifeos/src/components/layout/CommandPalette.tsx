@@ -1,6 +1,7 @@
+"use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from "next/navigation";
 import {
   Home,
   ListChecks,
@@ -10,7 +11,6 @@ import {
   BookOpen,
   Settings,
   Plus,
-  Calendar,
   Play,
 } from "lucide-react";
 import {
@@ -38,7 +38,7 @@ type Action = {
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
-  const [, navigate] = useLocation();
+  const router = useRouter();
   const { user } = useUser();
   const { habits } = useHabits(user?.id);
   const { tasks } = useTasks(user?.id);
@@ -65,9 +65,9 @@ export function CommandPalette() {
   const go = useCallback(
     (path: string) => {
       setOpen(false);
-      navigate(path);
+      router.push(path);
     },
-    [navigate],
+    [router],
   );
 
   const navItems: Action[] = useMemo(
@@ -165,6 +165,7 @@ export function CommandPalette() {
   );
 
   const all = [...navItems, ...actionItems, ...habitItems, ...taskItems, ...journalItems];
+  void all;
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen} title="Command palette" description="Jump to a page or create something new">

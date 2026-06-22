@@ -8,7 +8,7 @@ export async function uploadFileToApi(file: File): Promise<{ url: string; public
   const fd = new FormData();
   fd.append("file", file);
 
-  const apiBase = import.meta.env.VITE_API_URL ?? "";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "";
   const res = await fetch(`${apiBase}/api/upload`, {
     method: "POST",
     body: fd,

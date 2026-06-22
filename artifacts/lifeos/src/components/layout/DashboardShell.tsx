@@ -1,11 +1,12 @@
+"use client";
 
-import { useLocation } from "wouter";
+import { usePathname } from "next/navigation";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar";
 import { CommandPalette } from "./CommandPalette";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [pathname] = useLocation();
+  const pathname = usePathname();
 
   return (
     <div className="flex min-h-screen bg-background">

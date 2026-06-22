@@ -1,3 +1,5 @@
+"use client";
+
 
 import { Calendar, Pencil, Trash2, MoreVertical } from "lucide-react";
 import type { Goal } from "@/types";

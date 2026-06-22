@@ -1,3 +1,5 @@
+"use client";
+
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, format } from "date-fns";

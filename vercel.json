@@ -1,6 +1,6 @@
 {
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/lifeos run build",
-  "outputDirectory": "artifacts/lifeos/dist/public",
-  "framework": null,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "outputDirectory": "artifacts/lifeos/.next"
 }

@@ -1,6 +1,9 @@
 
+"use client";
+
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +27,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 export function LoginForm() {
-  const [, navigate] = useLocation();
+  const router = useRouter();
   const searchParams = new URLSearchParams(window.location.search);
   const redirect = searchParams.get("next") ?? searchParams.get("redirect") ?? "/dashboard";
   const [formError, setFormError] = useState<string | null>(null);
@@ -45,7 +48,7 @@ export function LoginForm() {
       setFormError(error.message);
       return;
     }
-    navigate(redirect);
+    router.push(redirect);
   }
 
   async function signInGoogle() {

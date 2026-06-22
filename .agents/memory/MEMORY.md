@@ -1,1 +1,1 @@
-- [LifeOS Vite migration patterns](lifeos-vite-migration.md) — key decisions from migrating a Next.js app to Replit Vite stack
+- [Next.js migration patterns](nextjs-migration.md) — LifeOS migrated Vite+wouter → Next.js 15 App Router; env bridging + use client sweep needed.

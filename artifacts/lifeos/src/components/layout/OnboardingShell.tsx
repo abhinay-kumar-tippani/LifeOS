@@ -1,4 +1,6 @@
-import { Link } from "wouter";
+"use client";
+
+import Link from "next/link";
 
 export default function OnboardingShell({ children }: { children: React.ReactNode }) {
   return (

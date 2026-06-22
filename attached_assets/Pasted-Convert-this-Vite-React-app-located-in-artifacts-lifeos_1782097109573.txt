@@ -1,0 +1,39 @@
+Convert this Vite + React app (located in artifacts/lifeos) into a Next.js 15 app using the App Router. This is a reverse migration — the app was previously Next.js and was converted to Vite; I want it converted back.
+
+Requirements:
+
+1. PROJECT STRUCTURE
+- Replace vite.config.ts with next.config.js (or .ts)
+- Convert the existing src/ structure into Next.js App Router conventions: app/ directory with layout.tsx, page.tsx, and nested routes matching the current pages/routes used by `wouter` (the current router).
+- Remove `wouter` and replace all routing with Next.js App Router file-based routing and `next/navigation` (useRouter, usePathname, Link from 'next/link') where needed.
+- Keep all existing components, hooks, and UI logic intact — only change the routing/data-fetching/env-var mechanics, not the actual UI/business logic, unless something is fundamentally incompatible with Next.js SSR.
+
+2. PACKAGE.JSON CHANGES
+- Update name to match a Next.js app (e.g. "lifeos"), remove vite, @vitejs/plugin-react, @replit/vite-plugin-* packages
+- Add "next" as a dependency (latest stable, 15.x)
+- Update scripts to:
+  "dev": "next dev"
+  "build": "next build"
+  "start": "next start"
+- Keep all other existing dependencies (Radix UI, Tailwind, Supabase, Zustand, etc.) — these are all compatible with Next.js
+
+3. ENVIRONMENT VARIABLES
+- Rename all `import.meta.env.VITE_*` references to `process.env.NEXT_PUBLIC_*`
+- Specifically: VITE_SUPABASE_URL → NEXT_PUBLIC_SUPABASE_URL, VITE_SUPABASE_ANON_KEY → NEXT_PUBLIC_SUPABASE_ANON_KEY
+- Update the Supabase client initialization file accordingly
+
+4. CLIENT/SERVER COMPONENTS
+- Add "use client" directive at the top of any component that uses React hooks (useState, useEffect, useContext, etc.), browser APIs, or event handlers
+- Keep components as Server Components by default where possible (no "use client") if they don't need interactivity, for better performance — but if unsure, default to "use client" to avoid breaking functionality, and I'll optimize later
+
+5. TAILWIND CONFIG
+- Ensure tailwind.config and postcss.config are compatible with Next.js (update content paths to scan the new app/ directory structure)
+
+6. VERCEL CONFIG
+- Update the root vercel.json to remove the custom buildCommand/outputDirectory/rewrites — Next.js on Vercel doesn't need a custom vercel.json, it's auto-detected. If keeping vercel.json for monorepo pathing reasons, set framework to "nextjs" and remove the SPA rewrite rule (Next.js handles routing natively)
+
+7. AFTER CONVERSION
+- Run a build locally (`pnpm --filter @workspace/lifeos run build` or equivalent) and fix any build errors before finishing
+- List out any components/features that couldn't be directly converted and need manual review
+
+Do not change any visual design, copy, or business logic — this should be a structural/framework migration only, output should look and behave identically to the current Vite version once converted.

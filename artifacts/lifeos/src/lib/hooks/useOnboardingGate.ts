@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/lib/hooks/useUser";
 import { useHabits } from "@/lib/hooks/useHabits";
 
@@ -11,7 +11,8 @@ function isPublicPath(pathname: string) {
 }
 
 export function useOnboardingGate() {
-  const [pathname, navigate] = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const { habits, loading: habitsLoading } = useHabits(user?.id);
   const [checked, setChecked] = useState(false);
@@ -23,7 +24,7 @@ export function useOnboardingGate() {
       return;
     }
     if (!user) {
-      navigate(`/login?next=${encodeURIComponent(pathname)}`, { replace: true });
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
       setChecked(true);
       return;
     }
@@ -32,8 +33,8 @@ export function useOnboardingGate() {
       complete = localStorage.getItem("lifeos-onboarding-complete") === "1";
     } catch { /* ignore */ }
     if (!complete && habits.length === 0) {
-      navigate("/onboarding");
+      router.push("/onboarding");
     }
     setChecked(true);
-  }, [userLoading, habitsLoading, habits.length, pathname, navigate, checked, user]);
+  }, [userLoading, habitsLoading, habits.length, pathname, router, checked, user]);
 }

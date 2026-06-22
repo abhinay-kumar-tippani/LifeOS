@@ -1,6 +1,8 @@
 
+"use client";
+
 import { useState } from "react";
-import { Link } from "wouter";
+import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

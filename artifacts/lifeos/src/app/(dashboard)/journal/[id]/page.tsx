@@ -1,6 +1,7 @@
+"use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams } from "next/navigation";
 import { useUser } from "@/lib/hooks/useUser";
 import { useJournal } from "@/lib/hooks/useJournal";
 import { JournalEditor } from "@/components/journal/JournalEditor";

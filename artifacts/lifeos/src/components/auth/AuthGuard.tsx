@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/lib/hooks/useUser";
 
 function AuthLoader() {
@@ -11,16 +13,17 @@ function AuthLoader() {
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [pathname, navigate] = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, loading } = useUser();
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
       const next = encodeURIComponent(pathname);
-      navigate(`/login?next=${next}`, { replace: true });
+      router.replace(`/login?next=${next}`);
     }
-  }, [user, loading, pathname, navigate]);
+  }, [user, loading, pathname, router]);
 
   if (loading) return <AuthLoader />;
   if (!user) return <AuthLoader />;
@@ -29,15 +32,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export function PublicOnlyGuard({ children }: { children: React.ReactNode }) {
-  const [, navigate] = useLocation();
+  const router = useRouter();
   const { user, loading } = useUser();
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-      navigate("/dashboard", { replace: true });
+      router.replace("/dashboard");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, router]);
 
   if (loading) return <AuthLoader />;
   if (user) return <AuthLoader />;

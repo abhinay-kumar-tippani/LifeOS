@@ -1,6 +1,8 @@
+"use client";
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -78,7 +80,8 @@ export function Sidebar({
   className?: string;
   onNavigate?: () => void;
 }) {
-  const [pathname, navigate] = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, profile } = useUser();
   const { habits, completions } = useHabits(user?.id);
   const supabase = getSupabaseClient();
@@ -101,7 +104,7 @@ export function Sidebar({
 
   async function logout() {
     await supabase.auth.signOut();
-    navigate("/login");
+    router.push("/login");
     onNavigate?.();
   }
 
@@ -119,7 +122,6 @@ export function Sidebar({
           className,
         )}
       >
-        {/* HEADER */}
         <div className="relative flex h-16 shrink-0 items-center border-b border-border/60 px-4 pr-12">
           <div className="flex items-center gap-2 overflow-hidden">
             <img src="/logo.svg" alt="LifeOS" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
@@ -145,7 +147,6 @@ export function Sidebar({
           </Button>
         </div>
 
-        {/* NAV */}
         <ScrollArea className="flex-1 px-2 py-4">
           <nav className="flex flex-col gap-4" aria-label="Dashboard">
             {sections.map((section) => (
@@ -214,7 +215,6 @@ export function Sidebar({
           </nav>
         </ScrollArea>
 
-        {/* FOOTER */}
         <div className="border-t border-border/60 p-3">
           {!collapsed ? (
             <Button

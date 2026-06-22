@@ -1,3 +1,5 @@
+"use client";
+
 
 import { motion, useReducedMotion } from "framer-motion";
 import { LayoutDashboard, Flame, Timer, Kanban, BookOpen, BarChart2, Target, Grid2x2 } from "lucide-react";

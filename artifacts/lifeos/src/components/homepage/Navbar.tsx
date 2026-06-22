@@ -1,6 +1,7 @@
+"use client";
 
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";

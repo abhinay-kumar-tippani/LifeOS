@@ -1,6 +1,8 @@
 
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from "next/navigation";
 import type { JournalEntry } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +28,7 @@ export function JournalEditor({
     entry_date?: string;
   }) => Promise<{ error: string | null }>;
 }) {
-  const [, navigate] = useLocation();
+  const router = useRouter();
   const draftKey = entry ? `journal-draft-${entry.id}` : "journal-draft-new";
   const [title, setTitle] = useState(entry?.title ?? "");
   const [content, setContent] = useState(entry?.content ?? "");
@@ -112,7 +114,7 @@ export function JournalEditor({
     }
     localStorage.removeItem(draftKey);
     toast.success("Saved");
-    navigate("/journal");
+    router.push("/journal");
   }
 
   return (

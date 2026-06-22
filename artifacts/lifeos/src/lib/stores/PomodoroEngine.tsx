@@ -1,3 +1,5 @@
+"use client";
+
 'use client'
 import { useEffect, useRef } from 'react'
 import { usePomodoroStore } from '@/lib/stores/pomodoroStore'

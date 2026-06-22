@@ -1,6 +1,8 @@
 
+"use client";
+
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/useUser";
@@ -31,7 +33,7 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [, navigate] = useLocation();
+  const router = useRouter();
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -130,7 +132,7 @@ export default function SettingsPage() {
         return;
       }
 
-      const edgeFunctionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`;
+      const edgeFunctionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-user`;
 
       const response = await fetch(edgeFunctionUrl, {
         method: "POST",
@@ -142,7 +144,7 @@ export default function SettingsPage() {
 
       if (response.ok) {
         await supabase.auth.signOut();
-        navigate("/");
+        router.push("/");
       } else {
         let errorMessage = "Failed to delete account. Please try again.";
         try {
