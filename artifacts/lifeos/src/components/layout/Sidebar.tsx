@@ -160,8 +160,8 @@ export function Sidebar({
                 )}
                 {section.items.map((item) => {
                   const Icon = item.icon;
-                  const active =
-                    pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  const active = 
+                  pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false);
                   const navItem = (
                     <Link
                       key={item.href}
