@@ -47,3 +47,17 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# next.js
+.next/
+out/
+
+# env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# misc
+*.pem
