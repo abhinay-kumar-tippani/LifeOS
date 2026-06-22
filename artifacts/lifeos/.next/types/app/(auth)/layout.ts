@@ -1,4 +1,4 @@
-// File: /home/runner/workspace/artifacts/lifeos/src/app/(auth)/layout.tsx
+// File: D:\Projects\Vibe Coding\Project-1\LifeOS\artifacts\lifeos\src\app\(auth)\layout.tsx
 import * as entry from '../../../../src/app/(auth)/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

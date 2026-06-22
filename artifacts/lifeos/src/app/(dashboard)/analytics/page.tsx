@@ -29,7 +29,7 @@ function AnalyticsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const range = searchParams.get("range") || "30";
+  const range = searchParams?.get("range") || "30";
   const rangeDays = range === "7" ? 7 : range === "90" ? 90 : 30;
 
   const { loading, error, data, refresh } = useAnalytics(user?.id, rangeDays);
@@ -113,7 +113,7 @@ function AnalyticsContent() {
                   variant={range === opt.value ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => {
-                    const params = new URLSearchParams(searchParams.toString());
+                    const params = new URLSearchParams(searchParams?.toString() || "");
                     params.set("range", opt.value);
                     router.push(`${pathname}?${params.toString()}`);
                   }}

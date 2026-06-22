@@ -11,7 +11,8 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import type { JournalEntry } from "@/types";
 
 export default function JournalDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const { user } = useUser();
   const { getEntry, saveEntry } = useJournal(user?.id);
   const [entry, setEntry] = useState<JournalEntry | null>(null);

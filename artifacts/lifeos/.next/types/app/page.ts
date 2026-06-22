@@ -1,4 +1,4 @@
-// File: /home/runner/workspace/artifacts/lifeos/src/app/page.tsx
+// File: D:\Projects\Vibe Coding\Project-1\LifeOS\artifacts\lifeos\src\app\page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
