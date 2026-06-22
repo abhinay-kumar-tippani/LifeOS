@@ -39,7 +39,7 @@ export function TopBar() {
   const router = useRouter();
   const { profile } = useUser();
   const supabase = getSupabaseClient();
-  const title = titleFromPath(pathname);
+  const title = titleFromPath(pathname ?? "/");
 
   async function logout() {
     await supabase.auth.signOut();

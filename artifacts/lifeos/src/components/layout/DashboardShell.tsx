@@ -23,7 +23,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <TopBar />
         <main
           id="main-content"
-          key={pathname}
+          key={pathname ?? ""}
           className="page-enter flex-1 overflow-auto p-4 sm:p-6 lg:p-8"
         >
           {children}

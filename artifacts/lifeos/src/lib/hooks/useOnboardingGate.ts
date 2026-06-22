@@ -20,12 +20,12 @@ export function useOnboardingGate() {
 
   useEffect(() => {
     if (userLoading || habitsLoading || checked) return;
-    if (isPublicPath(pathname)) {
+    if (isPublicPath(pathname ?? "/")) {
       setChecked(true);
       return;
     }
     if (!user) {
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      router.replace(`/login?next=${encodeURIComponent(pathname ?? "/")}`);
       setChecked(true);
       return;
     }

@@ -150,7 +150,7 @@ export function useAnalytics(userId: string | undefined, rangeDays: number = 30)
       const journalWeekCount = journalRes.data?.length ?? 0;
       const heatCompletions = (completionsHeatRes.data ?? []) as HabitCompletion[];
       const tasksDoneToday =
-        tasksDoneRes.data?.filter((t) => {
+        tasksDoneRes.data?.filter((t: { id: string; updated_at: string | null }) => {
           if (!t.updated_at) return false;
           return format(parseISO(t.updated_at as string), "yyyy-MM-dd") === today;
         }).length ?? 0;

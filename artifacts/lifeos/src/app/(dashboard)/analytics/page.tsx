@@ -115,7 +115,7 @@ function AnalyticsContent() {
                   onClick={() => {
                     const params = new URLSearchParams(searchParams?.toString() || "");
                     params.set("range", opt.value);
-                    router.push(`${pathname}?${params.toString()}`);
+                    router.push(`${pathname ?? ""}?${params.toString()}`);
                   }}
                   className="h-8 px-3 text-xs"
                 >
