@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, format } from "date-fns";
 import { useUser } from "@/lib/hooks/useUser";
 import { useHabits } from "@/lib/hooks/useHabits";
@@ -25,7 +25,6 @@ export default function HabitsPage() {
     completions,
     loading,
     error,
-    fetchCompletions,
     toggleCompletion,
     createHabit,
     updateHabit,
@@ -43,11 +42,6 @@ export default function HabitsPage() {
   const startDate = days[0]!;
   const endDate = days[days.length - 1]!;
 
-  useEffect(() => {
-    if (!uid) return;
-    void fetchCompletions();
-  }, [uid, fetchCompletions]);
-
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Habit | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Habit | null>(null);
@@ -63,11 +57,11 @@ export default function HabitsPage() {
       const isDone = completions.some(
         (c) => c.habit_id === habitId && c.completed_date.slice(0, 10) === date,
       );
+      // Optimistic update happens inside toggleCompletion — no need to refetch
       const { error: e } = await toggleCompletion(habitId, date, isDone);
       if (e) toast.error(e);
-      else await fetchCompletions();
     },
-    [completions, toggleCompletion, fetchCompletions],
+    [completions, toggleCompletion],
   );
 
   if (error) {

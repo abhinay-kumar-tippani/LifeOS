@@ -87,7 +87,7 @@ export default function DashboardPage() {
   const { profile, user } = useUser();
   const today = todayISODate();
   const uid = user?.id;
-  const { habits, completions, fetchCompletions, toggleCompletion, loading: hl, error: habitsErr } = useHabits(uid);
+  const { habits, completions, toggleCompletion, loading: hl, error: habitsErr } = useHabits(uid);
   const { tasks, loading: tl, createTask } = useTasks(uid);
   const { entries, loading: jl } = useJournal(uid);
   const { todaySessions, loading: pl } = usePomodoro(uid);
@@ -96,10 +96,17 @@ export default function DashboardPage() {
 
   const [quickTask, setQuickTask] = useState("");
 
+  // PWA shortcut: when opened via "Check Habits" home screen shortcut,
+  // scroll directly to the habit checklist so the user can tap immediately.
   useEffect(() => {
-    if (!uid) return;
-    void fetchCompletions();
-  }, [uid, fetchCompletions]);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("shortcut") !== "habits") return;
+    // Small delay to let React render the section first
+    const timer = setTimeout(() => {
+      document.getElementById("habits-checklist")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const quote = useMemo(() => QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length], []);
 
@@ -295,7 +302,7 @@ export default function DashboardPage() {
 
       {/* Habits + Top tasks */}
       <div className="animate-fade-up-4 grid gap-6 lg:grid-cols-2">
-        <Card className="card-hover border-border/60 bg-card/50">
+        <Card id="habits-checklist" className="card-hover border-border/60 bg-card/50">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <Flame className="h-4 w-4 text-orange-400" />
@@ -333,12 +340,11 @@ export default function DashboardPage() {
                     <Checkbox
                       checked={checked}
                       onCheckedChange={async () => {
+                        // Optimistic update in useHabits flips the checkbox instantly.
+                        // We just fire the mutation and handle confetti / errors.
+                        if (!checked) fireCompletionConfetti();
                         const { error } = await toggleCompletion(h.id, today, checked);
                         if (error) toast.error(error);
-                        else {
-                          if (!checked) fireCompletionConfetti();
-                          await fetchCompletions();
-                        }
                       }}
                       aria-label={`Complete ${h.name}`}
                     />
