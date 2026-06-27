@@ -83,7 +83,7 @@ export function HeroDashboardPreview() {
                     <div key={`${d}-${i}`} className="flex flex-col items-center gap-1">
                       <div
                         className={cn(
-                          "h-6 w-6 rounded-md border text-[10px] font-medium leading-6",
+                          "flex h-6 w-6 items-center justify-center rounded-md border text-[10px] font-medium leading-6",
                           weekDone[i]
                             ? "border-primary/50 bg-primary/25 text-primary"
                             : "border-white/10 bg-white/[0.02] text-muted-foreground",
