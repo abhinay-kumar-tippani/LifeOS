@@ -1,22 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
   "/page": "app/page.js",
-  "/privacy/page": "app/privacy/page.js",
-  "/terms/page": "app/terms/page.js",
-  "/callback/page": "app/callback/page.js",
-  "/(auth)/forgot-password/page": "app/(auth)/forgot-password/page.js",
-  "/(dashboard)/goals/page": "app/(dashboard)/goals/page.js",
   "/(auth)/signup/page": "app/(auth)/signup/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(dashboard)/analytics/page": "app/(dashboard)/analytics/page.js",
-  "/(dashboard)/habits/page": "app/(dashboard)/habits/page.js",
-  "/(dashboard)/journal/[id]/page": "app/(dashboard)/journal/[id]/page.js",
-  "/(dashboard)/matrix/page": "app/(dashboard)/matrix/page.js",
-  "/(dashboard)/journal/page": "app/(dashboard)/journal/page.js",
-  "/(dashboard)/journal/new/page": "app/(dashboard)/journal/new/page.js",
-  "/(dashboard)/settings/page": "app/(dashboard)/settings/page.js",
-  "/(dashboard)/pomodoro/page": "app/(dashboard)/pomodoro/page.js",
-  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
-  "/(onboarding)/onboarding/page": "app/(onboarding)/onboarding/page.js",
-  "/(dashboard)/tasks/page": "app/(dashboard)/tasks/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }
