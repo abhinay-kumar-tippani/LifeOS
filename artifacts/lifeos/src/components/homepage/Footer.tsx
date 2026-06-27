@@ -17,6 +17,9 @@ export function Footer() {
           <a href="https://github.com/abhinay-kumar-tippani/LifeOS" className="hover:text-foreground">
             GitHub
           </a>
+          <a href="https://www.linkedin.com/in/abhinay-kumar-tippani/" className="hover:text-foreground" target="_blank" rel="noreferrer">
+            LinkedIn
+          </a>
           <Link href="/privacy" className="hover:text-foreground">
             Privacy
           </Link>
